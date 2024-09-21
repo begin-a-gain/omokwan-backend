@@ -3,7 +3,9 @@ package begin_a_gain.omokwang.auth.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import begin_a_gain.omokwang.auth.enums.UserRole;
+import begin_a_gain.omokwang.auth.filter.JwtFilter;
 import begin_a_gain.omokwang.auth.service.JwtTokenService;
+import begin_a_gain.omokwang.exception.ExceptionHandlerFilter;
 import begin_a_gain.omokwang.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +19,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @RequiredArgsConstructor
-@Configuration
+@Configuration // spring 설정 클래스
 public class SecurityConfig {
     private final JwtTokenService jwtTokenService;
     private final UserService userService;
@@ -36,13 +38,15 @@ public class SecurityConfig {
                         .requestMatchers("/login/**", "/token/refresh").permitAll()
                         .requestMatchers("/user/**").hasAuthority(UserRole.USER.getRole())
                         .anyRequest().authenticated())
-                .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(
+                        (session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 사용하지 않음
                 .formLogin(httpSecurityFormLoginConfigurer -> httpSecurityFormLoginConfigurer.disable()) // 로그인 폼 미사용
                 .httpBasic(
                         httpSecurityHttpBasicConfigurer -> httpSecurityHttpBasicConfigurer.disable()) // http basic 미사용
                 .addFilterBefore(new JwtFilter(jwtTokenService, userService),
                         UsernamePasswordAuthenticationFilter.class) // JWT Filter 추가
-//                .addFilterBefore(new ExceptionHandlerFilter(), JwtFilter.class) // JwtFilter 에서 CustomException 사용하기 위해 추가
+                .addFilterBefore(new ExceptionHandlerFilter(),
+                        JwtFilter.class) // Security Filter 에서 CustomException 사용하기 위해 추가
                 .build();
     }
 
@@ -53,5 +57,4 @@ public class SecurityConfig {
                 web.ignoring()
                         .requestMatchers("/login/**", "/token/refresh");
     }
-
 }

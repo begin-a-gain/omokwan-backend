@@ -14,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class UserDto {
+public class User {
     @Id
     private Long id;
     private String email;

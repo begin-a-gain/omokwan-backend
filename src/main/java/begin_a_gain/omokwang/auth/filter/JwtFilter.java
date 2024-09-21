@@ -1,13 +1,17 @@
 package begin_a_gain.omokwang.auth.filter;
 
+import begin_a_gain.omokwang.auth.models.UserPrincipal;
 import begin_a_gain.omokwang.auth.service.JwtTokenService;
+import begin_a_gain.omokwang.exception.CustomException;
+import begin_a_gain.omokwang.exception.ErrorCode;
+import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.service.UserService;
-import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,7 +25,7 @@ public class JwtFilter extends GenericFilterBean {
     private final JwtTokenService jwtTokenService;
     private final UserService userService;
 
-    // Filter에서 액세스 토큰이 유효한지 확인 후 SecurityContext에 계정 정보 저장
+    // Filter 에서 액세스토큰이 유효한지 확인 후 SecurityContext에 계정정보 저장
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
@@ -30,8 +34,8 @@ public class JwtFilter extends GenericFilterBean {
         String jwt = resolveToken(httpServletRequest);
 
         if (StringUtils.hasText(jwt) && jwtTokenService.validateToken(jwt)) {
-            Long userId = Long.valueOf(jwtTokenService.getPayload(jwt)); // 토큰 Payload에 있는 userId 가져오기
-            UserDto user = userService.findById(userId); // userId로
+            Long userId = Long.valueOf(jwtTokenService.getPayload(jwt)); // 토큰에 있는 userId 가져오기
+            User user = userService.findById(userId); // userId로
             if (user == null) {
                 throw new CustomException(ErrorCode.NOT_EXIST_USER);
             }
@@ -56,5 +60,4 @@ public class JwtFilter extends GenericFilterBean {
 
         return null;
     }
-
 }

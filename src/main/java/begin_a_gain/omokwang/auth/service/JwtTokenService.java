@@ -1,5 +1,7 @@
 package begin_a_gain.omokwang.auth.service;
 
+import begin_a_gain.omokwang.exception.CustomException;
+import begin_a_gain.omokwang.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
@@ -15,18 +17,20 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.Random;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class JwtTokenService {
+public class JwtTokenService implements InitializingBean {
     private long accessTokenExpirationInSeconds;
     private long refreshTokenExpirationInSeconds;
     private final String secretKey;
     private static Key key;
 
     public JwtTokenService(
-            @Value("${jwt.access.token.expiration.seconds}") long accessTokenExpirationInSeconds,
-            @Value("${jwt.refresh.token.expiration.seconds}") long refreshTokenExpirationInSeconds,
+            @org.springframework.beans.factory.annotation.Value("${jwt.access.token.expiration.seconds}") long accessTokenExpirationInSeconds,
+            @org.springframework.beans.factory.annotation.Value("${jwt.refresh.token.expiration.seconds}") long refreshTokenExpirationInSeconds,
             @Value("${jwt.token.secret-key}") String secretKey
     ) {
         this.accessTokenExpirationInSeconds = accessTokenExpirationInSeconds * 1000;
@@ -64,7 +68,6 @@ public class JwtTokenService {
                 .compact();
     }
 
-    // JWT 토큰에서 Payload를 추출
     public String getPayload(String token) {
         try {
             return Jwts.parserBuilder()
@@ -96,7 +99,6 @@ public class JwtTokenService {
         return Encoders.BASE64.encode(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Base64로 인코딩된 시크릿 키에서 Key 객체를 생성
     private Key getKeyFromBase64EncodedKey(String base64EncodedSecretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(base64EncodedSecretKey);
 
@@ -105,7 +107,7 @@ public class JwtTokenService {
         return key;
     }
 
-    //클라이언트 쿠키에 리프레시토큰 저장
+    //클라이언트 쿠키에 리프레시토큰 저장 시켜주는 메소드
     public void addRefreshTokenToCookie(String refreshToken, HttpServletResponse response) {
         Long age = refreshTokenExpirationInSeconds;
         Cookie cookie = new Cookie("refresh_token", refreshToken);

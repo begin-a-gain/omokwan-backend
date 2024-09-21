@@ -1,6 +1,7 @@
 package begin_a_gain.omokwang.auth.models;
 
 import begin_a_gain.omokwang.auth.enums.UserRole;
+import begin_a_gain.omokwang.user.dto.User;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +24,7 @@ public class UserPrincipal implements UserDetails {
     @Setter
     private Map<String, Object> attributes;
 
-    public static UserPrincipal create(UserDto user) {
+    public static UserPrincipal create(User user) {
         List<GrantedAuthority> authorities =
                 Collections.singletonList(new SimpleGrantedAuthority(UserRole.USER.getRole()));
         return new UserPrincipal(

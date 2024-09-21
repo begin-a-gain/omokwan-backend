@@ -1,7 +1,8 @@
 package begin_a_gain.omokwang.user.service;
 
-import begin_a_gain.omokwang.user.dto.UserDto;
-import begin_a_gain.omokwang.user.mapper.UserRepository;
+import begin_a_gain.omokwang.user.dto.User;
+import begin_a_gain.omokwang.user.repository.UserRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,19 +11,21 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
 
-    public void save(UserDto userDto) {
-        userRepository.save(userDto);
+    public void save(User user) {
+        userRepository.save(user);
     }
 
-    public UserDto findById(Long id) {
+    public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
 
-    public UserDto findByRefreshToken(String refreshToken) {
+    public User findByRefreshToken(String refreshToken) {
         return userRepository.findByRefreshToken(refreshToken);
     }
 
-    public void updateRefreshToken(UserDto userDto) {
-        userRepository.updateRefreshToken(userDto);
+    public void updateRefreshToken(User user) {
+        Long id = user.getId();
+        String refreshToken = user.getRefreshToken();
+        userRepository.updateRefreshToken(id, refreshToken);
     }
 }
