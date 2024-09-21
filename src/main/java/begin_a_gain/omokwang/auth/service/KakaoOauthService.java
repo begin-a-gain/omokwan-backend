@@ -1,6 +1,7 @@
 package begin_a_gain.omokwang.auth.service;
 
 import begin_a_gain.omokwang.auth.dto.KakaoInfoDto;
+import begin_a_gain.omokwang.user.dto.UserDto;
 import begin_a_gain.omokwang.user.service.UserService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -34,11 +35,8 @@ public class KakaoOauthService {
                 .email(kakaoInfoDto.getEmail())
                 .platform("kakao")
                 .build();
-        if (userService.findById(userDto.getId()) != null) {
-            userService.update(userDto);
-        } else {
-            userService.save(userDto);
-        }
+
+        userService.save(userDto);
         return userDto;
     }
 }
