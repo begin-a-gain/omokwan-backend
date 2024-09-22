@@ -8,14 +8,14 @@ jwt:
       expiration:
         seconds: 604800 #7-day
   token:
-    secret-key: itsepguyitsepguyitsepgyitsitsits
+    secret-key: ${JWT_SECRET_KEY}
 
 # DB
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/omokwang?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul
-    username: root
-    password: root1234
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
