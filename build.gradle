@@ -31,9 +31,6 @@ dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-        // MyBatis 의존성
-        implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.2'
-
         // Lombok
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
@@ -51,7 +48,6 @@ dependencies {
 
         // 테스트 의존성
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
-        testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.2'
         testImplementation 'org.springframework.security:spring-security-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
