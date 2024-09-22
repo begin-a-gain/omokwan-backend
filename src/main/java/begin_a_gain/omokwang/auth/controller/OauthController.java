@@ -24,7 +24,8 @@ public class OauthController {
     // 생성자 주입 - 테스트 편의성, 불변 보장, 의존성 명확성
 
     @PostMapping("/login/oauth/{provider}")
-    public OauthResponseDto login(@PathVariable String provider, @RequestBody OauthRequestDto oauthRequestDto,
+    public OauthResponseDto login(@PathVariable("provider") String provider,
+                                  @RequestBody OauthRequestDto oauthRequestDto,
                                   HttpServletResponse response) {
         OauthResponseDto oauthResponseDto = new OauthResponseDto();
         switch (provider) {

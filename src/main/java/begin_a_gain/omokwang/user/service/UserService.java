@@ -19,13 +19,21 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    public Optional<User> findBySocialId(Long id) {
+        return userRepository.findBySocialId(id);
+    }
+
     public User findByRefreshToken(String refreshToken) {
         return userRepository.findByRefreshToken(refreshToken);
     }
 
     public void updateRefreshToken(User user) {
-        Long id = user.getId();
+        Long socialId = user.getSocialId();
         String refreshToken = user.getRefreshToken();
-        userRepository.updateRefreshToken(id, refreshToken);
+        userRepository.updateRefreshToken(socialId, refreshToken);
+    }
+
+    public Optional<User> findBySocialIdAndPlatform(Long socialId, String platform) {
+        return userRepository.findBySocialIdAndPlatform(socialId, platform);
     }
 }

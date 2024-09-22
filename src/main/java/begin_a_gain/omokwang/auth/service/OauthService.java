@@ -19,7 +19,7 @@ public class OauthService {
     //카카오 로그인
     public String loginWithKakao(String accessToken, HttpServletResponse response) {
         User user = kakaoOauthService.getUserProfileByToken(accessToken);
-        return getTokens(user.getId(), response);
+        return getTokens(user.getSocialId(), response);
     }
 
     //액세스토큰, 리프레시토큰 생성
@@ -27,7 +27,7 @@ public class OauthService {
         final String accessToken = jwtTokenService.createAccessToken(id.toString());
         final String refreshToken = jwtTokenService.createRefreshToken();
 
-        Optional<User> optionalUserInfo = userService.findById(id);
+        Optional<User> optionalUserInfo = userService.findBySocialId(id);
         optionalUserInfo.ifPresent(user -> {
             user.setRefreshToken(refreshToken);
             userService.updateRefreshToken(user);
@@ -48,6 +48,6 @@ public class OauthService {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        return jwtTokenService.createAccessToken(user.getId().toString());
+        return jwtTokenService.createAccessToken(user.getSocialId().toString());
     }
 }

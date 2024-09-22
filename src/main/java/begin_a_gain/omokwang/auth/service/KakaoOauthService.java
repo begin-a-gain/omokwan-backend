@@ -4,6 +4,7 @@ import begin_a_gain.omokwang.auth.dto.KakaoInfoDto;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.service.UserService;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -30,13 +31,17 @@ public class KakaoOauthService {
     public User getUserProfileByToken(String accessToken) {
         Map<String, Object> userAttributesByToken = getUserAttributesByToken(accessToken);
         KakaoInfoDto kakaoInfoDto = new KakaoInfoDto(userAttributesByToken);
+
         User user = User.builder()
-                .id(kakaoInfoDto.getId())
+                .socialId(kakaoInfoDto.getId())
                 .email(kakaoInfoDto.getEmail())
                 .platform("kakao")
                 .build();
 
-        userService.save(user);
+        Optional<User> existingUser = userService.findBySocialIdAndPlatform(kakaoInfoDto.getId(), "kakao");
+        if (existingUser.isEmpty()) {
+            userService.save(user);
+        }
         return user;
     }
 }
