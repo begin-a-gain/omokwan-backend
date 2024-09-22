@@ -35,10 +35,8 @@ public class JwtFilter extends GenericFilterBean {
 
         if (StringUtils.hasText(jwt) && jwtTokenService.validateToken(jwt)) {
             Long userId = Long.valueOf(jwtTokenService.getPayload(jwt)); // 토큰에 있는 userId 가져오기
-            User user = userService.findById(userId); // userId로
-            if (user == null) {
-                throw new CustomException(ErrorCode.NOT_EXIST_USER);
-            }
+            User user = userService.findById(userId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_USER));
             UserDetails userDetails = UserPrincipal.create(user);
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails,
                     null, userDetails.getAuthorities());
