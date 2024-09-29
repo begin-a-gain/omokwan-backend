@@ -51,6 +51,7 @@ dependencies {
         testImplementation 'org.springframework.security:spring-security-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+
         // Spring Boot Configuration Processor (optional, if you use configuration properties)
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     }
