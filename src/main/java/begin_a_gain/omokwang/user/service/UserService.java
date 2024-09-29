@@ -36,4 +36,13 @@ public class UserService {
     public Optional<User> findBySocialIdAndPlatform(Long socialId, String platform) {
         return userRepository.findBySocialIdAndPlatform(socialId, platform);
     }
+
+    public boolean isNicknameTaken(String nickname) {
+        return userRepository.existsByNickname(nickname);
+    }
+
+    public boolean isValidNickname(String nickname) {
+        String nicknamePattern = "^[a-zA-Z0-9가-힣]{2,10}$";
+        return nickname.matches(nicknamePattern);
+    }
 }

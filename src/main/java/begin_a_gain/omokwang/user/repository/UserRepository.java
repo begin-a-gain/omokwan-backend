@@ -14,6 +14,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     User findByRefreshToken(String refreshToken);
 
+    boolean existsByNickname(String nickname);
+
     Optional<User> findBySocialIdAndPlatform(Long socialId, String platform);
 
     // 리프레시 토큰 업데이트 메서드
