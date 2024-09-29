@@ -1,7 +1,10 @@
 package begin_a_gain.omokwang.user.service;
 
+import begin_a_gain.omokwang.exception.CustomException;
+import begin_a_gain.omokwang.exception.ErrorCode;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,5 +47,16 @@ public class UserService {
     public boolean isValidNickname(String nickname) {
         String nicknamePattern = "^[a-zA-Z0-9가-힣]{2,10}$";
         return nickname.matches(nicknamePattern);
+    }
+
+    @Transactional
+    public void updateNickname(long socialId, String nickname) {
+
+        User user = userRepository.findBySocialId(socialId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        user.setNickname(nickname);
+
+        userRepository.save(user);
     }
 }

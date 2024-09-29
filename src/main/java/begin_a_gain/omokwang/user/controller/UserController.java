@@ -8,6 +8,7 @@ import begin_a_gain.omokwang.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,5 +39,13 @@ public class UserController {
         }
 
         return ResponseEntity.ok("Nickname is valid.");
+    }
+
+    @PatchMapping("/nickname")
+    public ResponseEntity<String> updateNickname(@RequestParam String nickname) {
+        final long userId = SecurityUtil.getCurrentUserId();
+        userService.updateNickname(userId, nickname);
+        return ResponseEntity.ok("Nickname updated.");
+
     }
 }
