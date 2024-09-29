@@ -22,6 +22,7 @@ public class User {
     private Long id;
     private Long socialId;
     private String email;
+    private String nickname;
     private String platform;
     private String refreshToken;
 }
