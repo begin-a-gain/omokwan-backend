@@ -32,9 +32,7 @@ public class UserController {
 
     @Operation(summary = "Get user info", description = "Fetches user information based on the current user's ID.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User found",
-                    content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))}),
+            @ApiResponse(responseCode = "200", description = "User found"),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
     @GetMapping("/info")
