@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .csrf((csrf) -> csrf.disable())
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/login/**", "/token/refresh").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Swagger 관련 경로
                         .requestMatchers("/user/**").hasAuthority(UserRole.USER.getRole())
                         .anyRequest().authenticated())
                 .sessionManagement(
@@ -55,6 +56,7 @@ public class SecurityConfig {
         // 아래 url은 filter 에서 제외
         return web ->
                 web.ignoring()
-                        .requestMatchers("/login/**", "/token/refresh");
+                        .requestMatchers("/login/**", "/token/refresh")
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**");
     }
 }

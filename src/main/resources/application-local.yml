@@ -19,3 +19,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
+# http://localhost:8080/swagger-ui/index.html
+springdoc:
+  packages-to-scan: begin_a_gain.omokwang  # Swagger 문서를 생성할 컨트롤러가 포함된 패키지를 지정
+  paths-to-match: /**
+  api-docs:
+    path: /v3/api-docs  # 생성된 API 문서의 경로를 지정
+  swagger-ui:
+    groups-order: DESC # path, query, body, response 순으로 출력
+    tags-sorter: alpha # 태그를 알파벳 순으로 정렬
+    operations-sorter: method  # delete - get - patch - post - put 순으로 정렬, alpha를 사용하면 알파벳 순으로 정렬 가능
