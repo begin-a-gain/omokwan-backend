@@ -37,18 +37,18 @@ public class UserServiceTest {
 
     @ParameterizedTest(name = "닉네임: {0}, 기대 결과: {1}")
     @CsvSource({
-            "valid123, true",        // 유효한 닉네임
-            "가나다123, true",        // 한글과 숫자가 포함된 유효한 닉네임
-            "invalid!!, false",       // 특수문자가 포함된 닉네임
-            "a, false",               // 1글자 닉네임 (유효하지 않음)
-            "thisisaverylongname, false", // 10글자 초과 닉네임 (유효하지 않음)
-            "nick, true",            // 4글자로 유효한 닉네임
-            "닉네임test, true",       // 한글과 영문 조합으로 유효한 닉네임
-            "special@name, false"    // 특수문자 포함 (유효하지 않음)
+            "valid123, false",        // 유효한 닉네임
+            "가나다123, false",        // 한글과 숫자가 포함된 유효한 닉네임
+            "invalid!!, true",       // 특수문자가 포함된 닉네임
+            "a, true",               // 1글자 닉네임 (유효하지 않음)
+            "thisisaverylongname, true", // 10글자 초과 닉네임 (유효하지 않음)
+            "nick, false",            // 4글자로 유효한 닉네임
+            "닉네임test, false",       // 한글과 영문 조합으로 유효한 닉네임
+            "special@name, true"    // 특수문자 포함 (유효하지 않음)
     })
     @DisplayName("닉네임 유효성 검사 테스트")
-    void testIsValidNickname(String nickname, boolean expectedResult) {
-        boolean isValid = userService.isValidNickname(nickname);
+    void testIsInvalidNickname(String nickname, boolean expectedResult) {
+        boolean isValid = userService.isInvalidNickname(nickname);
 
         assertThat(isValid).isEqualTo(expectedResult);
     }
