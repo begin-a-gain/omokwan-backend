@@ -8,45 +8,57 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
       - uses: actions/checkout@v4
+
+      # JDK 17 설치 (Gradle 빌드에 사용)
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Configure Gradle for optimal use in GiHub Actions, including caching of downloaded dependencies.
-      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+      # Gradle 환경 설정 및 캐싱
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+        uses: gradle/actions/setup-gradle@v3.1.0
 
+      # Gradle 빌드 실행 (테스트 제외)
       - name: Build with Gradle Wrapper
         run: ./gradlew build -x test
 
-      # Docker build & Push
+      # 현재 GitHub Actions의 IP를 보안 그룹에 추가 (SSH 접근 허용)
+      - name: Add Github Actions IP to Security group
+        run: |
+          IP=$(curl https://checkip.amazonaws.com)  # GitHub Actions의 공인 IP 가져오기
+          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr $IP/32  # 보안 그룹에 IP 추가
+
+      # Docker 이미지 빌드 및 Docker Hub로 푸시
       - name: Docker build & push to Docker hub
         run: |
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-test:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/docker-test:latest
 
-      # EC2 배포
+      # EC2 인스턴스로 접속 후 Docker 이미지를 풀(pull)하고 컨테이너 실행
       - name: Docker image pull & Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }} # EC2 인스턴스 퍼블릭 DNS
-          username: ubuntu
-          key: ${{ secrets.EC2_PRIVATE_KEY }} # pem 키
-          # 도커 작업
+          host: ${{ secrets.EC2_HOST }}  # EC2 인스턴스 퍼블릭 IP
+          username: ubuntu  # EC2 인스턴스 사용자 (Ubuntu)
+          key: ${{ secrets.EC2_PRIVATE_KEY }}  # SSH 접속을 위한 PEM 파일 키
           script: |
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-test:latest
-            sudo docker stop $(sudo docker ps -a -q)
-            sudo docker run -d --log-driver=syslog -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/docker-test:latest
-            sudo docker rm $(sudo docker ps --filter 'status=exited' -a -q)
-            sudo docker image prune -a -f
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-test:latest  # Docker Hub에서 최신 이미지 풀
+            sudo docker stop $(sudo docker ps -a -q)  # 실행 중인 컨테이너 중지
+            sudo docker run -d --log-driver=syslog -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/docker-test:latest  # 새로운 Docker 컨테이너 실행
+            sudo docker rm $(sudo docker ps --filter 'status=exited' -a -q)  # 중지된 컨테이너 제거
+            sudo docker image prune -a -f  # 사용하지 않는 이미지 정리
+
+      # 보안 그룹에서 GitHub Actions IP 제거 (보안 강화)
+      - name: Remove Github Actions IP From Security Group
+        run: |
+          IP=$(curl https://checkip.amazonaws.com)  # GitHub Actions의 공인 IP 가져오기
+          aws ec2 revoke-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr $IP/32  # 보안 그룹에서 IP 제거
