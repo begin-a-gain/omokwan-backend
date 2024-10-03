@@ -2,9 +2,7 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ "develop" ]  # develop 브랜치에 푸시될 때 트리거
-  pull_request:
-    branches: [ "develop" ]  # develop 브랜치로 PR 요청 시 트리거
+    branches: [ "main" ]  # main 브랜치에 푸시될 때 트리거
 
 permissions:
   contents: read
