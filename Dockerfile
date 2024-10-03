@@ -8,4 +8,4 @@ ARG JAR_FILE=build/libs/omokwang-0.0.1-SNAPSHOT.jar
 COPY ${JAR_FILE} app.jar
 
 # 백그라운드로 실행할 필요가 없으므로 nohup을 사용하지 않고 ENTRYPOINT로 바로 실행
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "/app.jar"]
