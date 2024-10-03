@@ -44,9 +44,9 @@ public class UserService {
         return userRepository.existsByNickname(nickname);
     }
 
-    public boolean isValidNickname(String nickname) {
+    public boolean isInvalidNickname(String nickname) {
         String nicknamePattern = "^[a-zA-Z0-9가-힣]{2,10}$";
-        return nickname.matches(nicknamePattern);
+        return !nickname.matches(nicknamePattern);
     }
 
     @Transactional

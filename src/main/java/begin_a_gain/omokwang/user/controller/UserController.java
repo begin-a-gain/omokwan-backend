@@ -29,7 +29,7 @@ public class UserController {
     @GetMapping("/validations/nicknames")
     public ResponseEntity<String> checkNickname(@RequestParam String nickname) {
 
-        if (userService.isValidNickname(nickname)) {
+        if (!userService.isInvalidNickname(nickname)) {
             return ResponseEntity.badRequest()
                     .body("Invalid nickname: Must be 2-10 characters long and cannot include special characters.");
         }
