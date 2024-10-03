@@ -1,64 +1,61 @@
-name: CI/CD using github actions & docker
+name: Java CI with Gradle
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "develop" ]  # develop 브랜치에 푸시될 때 트리거
   pull_request:
-    branches: [ "main" ]
+    branches: [ "develop" ]  # develop 브랜치로 PR 요청 시 트리거
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  CI-CD:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
+      ## 코드 체크아웃
       - uses: actions/checkout@v4
 
-      # JDK 17 설치 (Gradle 빌드에 사용)
+      ## JDK 17 설정
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Gradle 환경 설정 및 캐싱
+      ## Gradle 캐싱 (빌드 속도 향상)
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-      # Gradle 빌드 실행 (테스트 제외)
-      - name: Build with Gradle Wrapper
-        run: ./gradlew build -x test
+      ## Gradlew 실행 권한 부여
+      - name: Grant Execute Permission For Gradlew
+        run: chmod +x gradlew
 
-      # 현재 GitHub Actions의 IP를 보안 그룹에 추가 (SSH 접근 허용)
-      - name: Add Github Actions IP to Security group
+      ## Docker 이미지 빌드 및 푸시
+      - name: docker build
         run: |
-          IP=$(curl https://checkip.amazonaws.com)  # GitHub Actions의 공인 IP 가져오기
-          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr $IP/32  # 보안 그룹에 IP 추가
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}  # DockerHub 로그인
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-test .  # Docker 이미지 빌드
+          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test:latest  # Docker 이미지 푸시
 
-      # Docker 이미지 빌드 및 Docker Hub로 푸시
-      - name: Docker build & push to Docker hub
-        run: |
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-test:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test:latest
-
-      # EC2 인스턴스로 접속 후 Docker 이미지를 풀(pull)하고 컨테이너 실행
-      - name: Docker image pull & Deploy to EC2
+      ## EC2 서버에 배포
+      - name: Deploy to dev
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}  # EC2 인스턴스 퍼블릭 IP
-          username: ubuntu  # EC2 인스턴스 사용자 (Ubuntu)
-          key: ${{ secrets.EC2_PRIVATE_KEY }}  # SSH 접속을 위한 PEM 파일 키
+          key: ${{ secrets.EC2_PRIVATE_KEY }}  # EC2 접근을 위한 SSH 키
+          host: ${{ secrets.EC2_HOST }}  # EC2 인스턴스 호스트
+          username: ubuntu  # EC2 사용자 이름
+          port: 22
           script: |
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-test:latest  # Docker Hub에서 최신 이미지 풀
-            sudo docker stop $(sudo docker ps -a -q)  # 실행 중인 컨테이너 중지
-            sudo docker run -d --log-driver=syslog -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/docker-test:latest  # 새로운 Docker 컨테이너 실행
-            sudo docker rm $(sudo docker ps --filter 'status=exited' -a -q)  # 중지된 컨테이너 제거
-            sudo docker image prune -a -f  # 사용하지 않는 이미지 정리
-
-      # 보안 그룹에서 GitHub Actions IP 제거 (보안 강화)
-      - name: Remove Github Actions IP From Security Group
-        run: |
-          IP=$(curl https://checkip.amazonaws.com)  # GitHub Actions의 공인 IP 가져오기
-          aws ec2 revoke-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr $IP/32  # 보안 그룹에서 IP 제거
+            docker rm -f $(docker ps -qa)  # 기존 컨테이너 삭제
+            docker pull ${{ secrets.DOCKER_USERNAME }}/docker-test  # 최신 이미지 가져오기
+            docker-compose up -d  # 새로운 컨테이너 실행
+            docker image prune -f  # 사용되지 않는 이미지 정리
