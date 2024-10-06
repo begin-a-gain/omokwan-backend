@@ -36,7 +36,7 @@ public class OauthController {
     @Operation(summary = "Oauth 로그인", description = "Oauth 로그인을 진행한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공",
-                    content = {@Content(schema = @Schema(implementation = OauthRequestDto.class))}),
+                    content = {@Content(schema = @Schema(implementation = OauthResponseDto.class))}),
     })
     @PostMapping("/login/oauth/{provider}")
     public OauthResponseDto login(@PathVariable("provider") String provider,
