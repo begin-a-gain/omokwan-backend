@@ -47,8 +47,8 @@ public class OauthController {
             case "kakao":
                 OauthDto oauthInfo = oauthService.loginWithKakao(oauthRequestDto.getAccessToken(), response);
 
-                boolean isSignUpComplete = userService.isSignUpComplete(oauthInfo.getSocialId());
-                oauthResponseDto = new OauthResponseDto(oauthInfo.getAccessToken(), isSignUpComplete);
+                boolean signUpComplete = userService.isSignUpComplete(oauthInfo.getSocialId());
+                oauthResponseDto = new OauthResponseDto(oauthInfo.getAccessToken(), signUpComplete);
         }
         return oauthResponseDto;
     }

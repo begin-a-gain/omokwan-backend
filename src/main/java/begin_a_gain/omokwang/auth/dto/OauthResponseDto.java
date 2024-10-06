@@ -11,6 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class OauthResponseDto {
     private String accessToken;
-    private boolean isSignUpComplete;
+    private boolean signUpComplete;
 }
 
