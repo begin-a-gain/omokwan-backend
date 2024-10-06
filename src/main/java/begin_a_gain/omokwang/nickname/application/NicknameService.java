@@ -52,7 +52,4 @@ public class NicknameService {
         return Optional.empty(); // 닉네임이 유효하고 사용 가능함을 의미
     }
 
-    public boolean isSignUpComplete(long socialId) {
-        return userRepository.existsNicknameBySocialId(socialId);
-    }
 }

@@ -4,7 +4,7 @@ import begin_a_gain.omokwang.auth.utils.SecurityUtil;
 import begin_a_gain.omokwang.nickname.application.NicknameService;
 import begin_a_gain.omokwang.nickname.domain.NicknameUpdateDto;
 import begin_a_gain.omokwang.nickname.dto.NicknameRequest;
-import begin_a_gain.omokwang.nickname.dto.NicknameValidationResponse;
+import begin_a_gain.omokwang.nickname.dto.NicknameResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,22 +28,15 @@ public class NicknameController {
     @Operation(summary = "Check nickname availability", description = "Checks if the provided nickname is valid and available.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Nickname is valid and available",
-                    content = @Content(schema = @Schema(implementation = NicknameValidationResponse.class))),
+                    content = @Content(schema = @Schema(implementation = NicknameResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid nickname or nickname already taken", content = @Content)
     })
     @PostMapping("/validations/nicknames")
-    public ResponseEntity<?> checkNickname(@RequestBody NicknameRequest nicknameRequest) {
+    public ResponseEntity<String> checkNickname(@RequestBody NicknameRequest nicknameRequest) {
         Optional<String> validationError = nicknameService.validateNickname(nicknameRequest.getNickname());
 
-        final long socialId = SecurityUtil.getCurrentUserId();
-        boolean isSignUpComplete = nicknameService.isSignUpComplete(socialId);
-        return validationError
-                .map(error -> ResponseEntity.badRequest().body((Object) error))  // 명시적으로 Object로 캐스팅
-                .orElseGet(() -> {
-                    NicknameValidationResponse response = new NicknameValidationResponse(true,
-                            isSignUpComplete);
-                    return ResponseEntity.ok(response);
-                });
+        return validationError.map(x -> ResponseEntity.badRequest().body(x))
+                .orElseGet(() -> ResponseEntity.ok("Nickname is valid and available."));
     }
 
     @Operation(summary = "Update user nickname", description = "nickname 업데이트.")

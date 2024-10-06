@@ -34,6 +34,10 @@ public class UserService {
         userRepository.updateRefreshToken(socialId, refreshToken);
     }
 
+    public boolean isSignUpComplete(long socialId) {
+        return userRepository.existsNicknameBySocialId(socialId);
+    }
+
     public Optional<User> findBySocialIdAndPlatform(Long socialId, String platform) {
         return userRepository.findBySocialIdAndPlatform(socialId, platform);
     }

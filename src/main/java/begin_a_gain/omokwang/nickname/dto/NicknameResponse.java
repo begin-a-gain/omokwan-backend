@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class NicknameValidationResponse {
-    private boolean validNickname;
-    private boolean isSignupComplete;
+public class NicknameResponse {
+    private String nickname;
 }

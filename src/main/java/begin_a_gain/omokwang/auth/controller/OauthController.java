@@ -1,11 +1,13 @@
 package begin_a_gain.omokwang.auth.controller;
 
+import begin_a_gain.omokwang.auth.dto.OauthDto;
 import begin_a_gain.omokwang.auth.dto.OauthRequestDto;
 import begin_a_gain.omokwang.auth.dto.OauthResponseDto;
 import begin_a_gain.omokwang.auth.dto.RefreshTokenResponseDto;
 import begin_a_gain.omokwang.auth.service.OauthService;
 import begin_a_gain.omokwang.exception.CustomException;
 import begin_a_gain.omokwang.exception.ErrorCode;
+import begin_a_gain.omokwang.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class OauthController {
     private final OauthService oauthService;
+    private final UserService userService;
     // 생성자 주입 - 테스트 편의성, 불변 보장, 의존성 명확성
 
     @Operation(summary = "Oauth 로그인", description = "Oauth 로그인을 진행한다.")
@@ -42,8 +45,10 @@ public class OauthController {
         OauthResponseDto oauthResponseDto = new OauthResponseDto();
         switch (provider) {
             case "kakao":
-                String accessToken = oauthService.loginWithKakao(oauthRequestDto.getAccessToken(), response);
-                oauthResponseDto.setAccessToken(accessToken);
+                OauthDto oauthInfo = oauthService.loginWithKakao(oauthRequestDto.getAccessToken(), response);
+
+                boolean isSignUpComplete = userService.isSignUpComplete(oauthInfo.getSocialId());
+                oauthResponseDto = new OauthResponseDto(oauthInfo.getAccessToken(), isSignUpComplete);
         }
         return oauthResponseDto;
     }

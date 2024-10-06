@@ -1,5 +1,6 @@
 package begin_a_gain.omokwang.auth.service;
 
+import begin_a_gain.omokwang.auth.dto.OauthDto;
 import begin_a_gain.omokwang.exception.CustomException;
 import begin_a_gain.omokwang.exception.ErrorCode;
 import begin_a_gain.omokwang.user.dto.User;
@@ -17,9 +18,9 @@ public class OauthService {
     private final KakaoOauthService kakaoOauthService;
 
     //카카오 로그인
-    public String loginWithKakao(String accessToken, HttpServletResponse response) {
+    public OauthDto loginWithKakao(String accessToken, HttpServletResponse response) {
         User user = kakaoOauthService.getUserProfileByToken(accessToken);
-        return getTokens(user.getSocialId(), response);
+        return new OauthDto(getTokens(user.getSocialId(), response), user.getSocialId());
     }
 
     //액세스토큰, 리프레시토큰 생성
