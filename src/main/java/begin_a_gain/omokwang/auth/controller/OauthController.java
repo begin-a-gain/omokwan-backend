@@ -42,6 +42,11 @@ public class OauthController {
     public OauthResponseDto login(@PathVariable("provider") @Schema(example = "kakao, apple") String provider,
                                   @RequestBody OauthRequestDto oauthRequestDto,
                                   HttpServletResponse response) {
+
+        if (!provider.equals("kakao") && !provider.equals("apple")) {
+            throw new CustomException(ErrorCode.BAD_REQUEST);
+        }
+
         OauthResponseDto oauthResponseDto = new OauthResponseDto();
         switch (provider) {
             case "kakao":
