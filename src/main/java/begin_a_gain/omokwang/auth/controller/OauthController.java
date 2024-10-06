@@ -39,7 +39,7 @@ public class OauthController {
                     content = {@Content(schema = @Schema(implementation = OauthResponseDto.class))}),
     })
     @PostMapping("/login/oauth/{provider}")
-    public OauthResponseDto login(@PathVariable("provider") String provider,
+    public OauthResponseDto login(@PathVariable("provider") @Schema(example = "kakao, apple") String provider,
                                   @RequestBody OauthRequestDto oauthRequestDto,
                                   HttpServletResponse response) {
         OauthResponseDto oauthResponseDto = new OauthResponseDto();
