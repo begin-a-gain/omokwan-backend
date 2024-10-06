@@ -23,4 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.refreshToken = :refreshToken WHERE u.socialId = :socialId")
     void updateRefreshToken(@Param("socialId") Long socialId, @Param("refreshToken") String refreshToken);
+
+    @Query("SELECT CASE WHEN u.nickname IS NULL THEN false ELSE true END FROM User u WHERE u.socialId = :socialId")
+    boolean existsNicknameBySocialId(@Param("socialId") Long socialId);
 }
