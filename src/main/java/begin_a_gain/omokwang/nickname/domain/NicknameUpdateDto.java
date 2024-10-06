@@ -1,4 +1,4 @@
-package begin_a_gain.omokwang.user.dto;
+package begin_a_gain.omokwang.nickname.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
