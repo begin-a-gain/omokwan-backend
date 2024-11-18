@@ -14,8 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,7 +31,7 @@ public class NicknameController {
                     content = @Content(schema = @Schema(implementation = NicknameResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid nickname or nickname already taken", content = @Content)
     })
-    @PostMapping("/validations/nicknames")
+    @PostMapping("/nicknames/validations")
     public ResponseEntity<String> checkNickname(@RequestBody NicknameRequest nicknameRequest) {
         Optional<String> validationError = nicknameService.validateNickname(nicknameRequest.getNickname());
 
@@ -43,7 +43,7 @@ public class NicknameController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Nickname updated successfully")
     })
-    @PatchMapping("/nickname")
+    @PutMapping("/nicknames")
     public ResponseEntity<String> updateNickname(@RequestBody NicknameRequest nicknameRequest) {
         final long userId = SecurityUtil.getCurrentUserId();
         String nickname = nicknameRequest.getNickname();
