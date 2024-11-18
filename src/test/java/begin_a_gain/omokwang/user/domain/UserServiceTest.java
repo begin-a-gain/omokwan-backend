@@ -3,8 +3,8 @@ package begin_a_gain.omokwang.user.domain;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.when;
 
+import begin_a_gain.omokwang.nickname.application.NicknameService;
 import begin_a_gain.omokwang.user.repository.UserRepository;
-import begin_a_gain.omokwang.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class UserServiceTest {
 
     @InjectMocks
-    private UserService userService;
+    private NicknameService nicknameService;
 
     @Mock
     private UserRepository userRepository;
@@ -28,9 +28,9 @@ public class UserServiceTest {
     @DisplayName("닉네임 중복 체크 - 닉네임이 존재하는 경우")
     void testIsNicknameTaken_NicknameExists() {
         String existingNickname = "existingNick";
-        when(userRepository.existsByNickname(existingNickname)).thenReturn(true);
 
-        boolean isTaken = userService.isNicknameTaken(existingNickname);
+        when(userRepository.existsByNickname(existingNickname)).thenReturn(true);
+        boolean isTaken = nicknameService.isNicknameTaken(existingNickname);
 
         assertThat(isTaken).isTrue();
     }
@@ -48,10 +48,9 @@ public class UserServiceTest {
     })
     @DisplayName("닉네임 유효성 검사 테스트")
     void testIsInvalidNickname(String nickname, boolean expectedResult) {
-        boolean isValid = userService.isInvalidNickname(nickname);
+
+        boolean isValid = nicknameService.isInvalidNickname(nickname);
 
         assertThat(isValid).isEqualTo(expectedResult);
     }
-
-
 }
