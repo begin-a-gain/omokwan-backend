@@ -25,20 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class NicknameController {
     private final NicknameService nicknameService;
 
-    @Operation(summary = "Check nickname availability", description = "Checks if the provided nickname is valid and available.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Nickname is valid and available",
-                    content = @Content(schema = @Schema(implementation = NicknameResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid nickname or nickname already taken", content = @Content)
-    })
-    @PostMapping("/nicknames/validations")
-    public ResponseEntity<String> checkNickname(@RequestBody NicknameRequest nicknameRequest) {
-        Optional<String> validationError = nicknameService.validateNickname(nicknameRequest.getNickname());
-
-        return validationError.map(x -> ResponseEntity.badRequest().body(x))
-                .orElseGet(() -> ResponseEntity.ok("Nickname is valid and available."));
-    }
-
     @Operation(summary = "Update user nickname", description = "nickname 업데이트.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Nickname updated successfully")
@@ -52,5 +38,19 @@ public class NicknameController {
         nicknameService.updateNickname(nicknameUpdateParam);
         return ResponseEntity.ok("Nickname updated.");
 
+    }
+
+    @Operation(summary = "Check nickname availability", description = "Checks if the provided nickname is valid and available.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Nickname is valid and available",
+                    content = @Content(schema = @Schema(implementation = NicknameResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid nickname or nickname already taken", content = @Content)
+    })
+    @PostMapping("/nicknames/validations")
+    public ResponseEntity<String> checkNickname(@RequestBody NicknameRequest nicknameRequest) {
+        Optional<String> validationError = nicknameService.validateNickname(nicknameRequest.getNickname());
+
+        return validationError.map(x -> ResponseEntity.badRequest().body(x))
+                .orElseGet(() -> ResponseEntity.ok("Nickname is valid and available."));
     }
 }
