@@ -64,7 +64,7 @@ public class OauthController {
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
             @ApiResponse(responseCode = "401", description = "유효하지않은 리프레시 토큰입니다.", content = @Content)
     })
-    @PostMapping("/token/refresh")
+    @PostMapping("/login/token/refresh")
     public RefreshTokenResponseDto tokenRefresh(HttpServletRequest request) {
         RefreshTokenResponseDto refreshTokenResponseDto = new RefreshTokenResponseDto();
         Cookie[] list = request.getCookies();
