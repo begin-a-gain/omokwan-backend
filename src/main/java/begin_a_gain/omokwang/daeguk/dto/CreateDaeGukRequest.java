@@ -15,7 +15,7 @@ public class CreateDaeGukRequest {
 
     private boolean isPublic;
 
-    private String password;
+    private int password;
 
     private String daegukCode;
 }

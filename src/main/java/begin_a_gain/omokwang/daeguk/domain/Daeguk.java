@@ -43,7 +43,7 @@ public class Daeguk {
 
     private boolean isPublic;
 
-    private String password;
+    private int password;
 
     @Column(name = "daeguk_code", nullable = false, unique = true)
     private String daegukCode;
