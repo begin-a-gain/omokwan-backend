@@ -3,7 +3,7 @@ package begin_a_gain.omokwang.daeguk;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import begin_a_gain.omokwang.daeguk.domain.Daeguk;
-import begin_a_gain.omokwang.daeguk.domain.DaegukRepository;
+import begin_a_gain.omokwang.daeguk.repository.DaegukRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -35,7 +35,7 @@ public class DaegukServiceTest {
                 .nickname("test")
                 .platform("kakao")
                 .build();
-        
+
         User savedUser = userRepository.save(user);
 
         Daeguk daeguk = Daeguk.builder()

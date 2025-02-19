@@ -19,15 +19,15 @@ public enum DayType {
     WEEKENDS(9, "GROUP"),
     EVERYDAY(10, "GROUP");
 
-    private final int code;
+    private final int dayOfWeek;
     private final String category;
 
     private static final Map<Integer, DayType> CODE_MAP = Arrays.stream(values())
-            .collect(Collectors.toMap(DayType::getCode, Function.identity()));
+            .collect(Collectors.toMap(DayType::getDayOfWeek, Function.identity()));
 
 
-    public int getCode() {
-        return code;
+    public int getDayOfWeek() {
+        return dayOfWeek;
     }
 
     public String getCategory() {
