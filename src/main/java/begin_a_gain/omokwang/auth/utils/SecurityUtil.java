@@ -11,7 +11,7 @@ public class SecurityUtil {
     }
 
     // 현재 인증된 사용자의 ID
-    public static long getCurrentUserId() {
+    public static long getCurrentUserSocialId() {
 
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

@@ -10,7 +10,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "daeguk_day",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"daeguk_id", "day_of_week"})})
@@ -23,7 +31,7 @@ public class DaegukDay {
     @JoinColumn(name = "daeguk_id", nullable = false)
     Daeguk daeguk;
 
-    @Column(nullable = false)
-    private String dayOfWeek;
+    @Column(name = "day_of_week", nullable = false)
+    private int dayOfWeek;
 
 }

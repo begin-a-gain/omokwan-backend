@@ -36,7 +36,7 @@ public class Daeguk {
     @Column(name = "create_date", nullable = false, updatable = false)
     private LocalDate createDate;
 
-    @Column(name = "max_participant")
+    @Column(name = "max_participants")
     private int maxParticipants;
 
     @Column(name = "participants")

@@ -29,7 +29,7 @@ public class UserController {
     })
     @GetMapping("/info")
     public User info() {
-        final long userId = SecurityUtil.getCurrentUserId();
+        final long userId = SecurityUtil.getCurrentUserSocialId();
         return userService.findBySocialId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_USER));
     }

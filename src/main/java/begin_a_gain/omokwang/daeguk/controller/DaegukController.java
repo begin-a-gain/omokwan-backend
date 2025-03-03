@@ -2,15 +2,18 @@ package begin_a_gain.omokwang.daeguk.controller;
 
 import begin_a_gain.omokwang.daeguk.application.DaegukService;
 import begin_a_gain.omokwang.daeguk.dto.CreateDaegukRequest;
+import begin_a_gain.omokwang.daeguk.dto.CreateDaegukResponse;
+import begin_a_gain.omokwang.daeguk.dto.DaegukByDayResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,8 +33,8 @@ public class DaegukController {
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
     @PostMapping("/daeguks")
-    public void createDaeguk(@RequestBody CreateDaegukRequest request) {
-        daegukService.createDaeguk(request);
+    public CreateDaegukResponse createDaeguk(@RequestBody CreateDaegukRequest request) {
+        return daegukService.createDaeguk(request);
     }
 
     @Operation(summary = "대국 찾기", description = "날짜별 대국 찾기")
@@ -40,7 +43,9 @@ public class DaegukController {
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
     @GetMapping("/daeguks")
-    public void findDaeguk(@RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate date) {
-        daegukService.findDaegukByday(date);
+    public List<DaegukByDayResponse> findDaegukByDay(
+            @Parameter(description = "조회할 날짜 (YYYY-MM-DD 형식)", example = "2025-03-01")
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return daegukService.findDaegukByday(date);
     }
 }
