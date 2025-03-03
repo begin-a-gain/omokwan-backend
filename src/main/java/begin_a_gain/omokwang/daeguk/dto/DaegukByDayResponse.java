@@ -24,4 +24,7 @@ public class DaegukByDayResponse {
     @Schema(description = "최대 참가자 수", example = "5")
     private int maxParticipants;
 
+    @Schema(description = "공개 대국 여부", example = "true")
+    private boolean isPublic;
+
 }
