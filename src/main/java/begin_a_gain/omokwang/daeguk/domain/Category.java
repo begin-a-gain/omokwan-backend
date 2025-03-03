@@ -1,14 +1,16 @@
 package begin_a_gain.omokwang.daeguk.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
+import lombok.Getter;
 
-@Entity
-@Table(name = "daeguk_category")
+@Getter
+@Builder
+@Schema(description = "대국 카테고리")
 public class Category {
-    @Id
-    private String category;
+    @Schema(description = "대국 카테고리 코드", example = "1")
+    private String code;
 
-    private String description;
+    @Schema(description = "대국 카테고리", example = "운동")
+    private String category;
 }

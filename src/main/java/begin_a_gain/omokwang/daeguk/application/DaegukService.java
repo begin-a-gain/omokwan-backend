@@ -1,6 +1,8 @@
 package begin_a_gain.omokwang.daeguk.application;
 
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
+import begin_a_gain.omokwang.daeguk.domain.Category;
+import begin_a_gain.omokwang.daeguk.domain.CategoryType;
 import begin_a_gain.omokwang.daeguk.domain.Daeguk;
 import begin_a_gain.omokwang.daeguk.domain.DaegukDay;
 import begin_a_gain.omokwang.daeguk.domain.DayType;
@@ -15,6 +17,7 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,12 +46,16 @@ public class DaegukService {
     }
 
     private Daeguk mapToDaeguk(CreateDaegukRequest request, User user) {
+        if (Objects.nonNull(request.getCategoryCode()) && !CategoryType.isValidCategory(request.getCategoryCode())) {
+            throw new IllegalArgumentException("Invalid category code: " + request.getCategoryCode());
+        }
+
         return Daeguk.builder()
                 .createId(user)
                 .name(request.getName())
                 .maxParticipants(request.getMaxParticipants())
                 .participants(1)
-                .category(request.getCategory())
+                .category(request.getCategoryCode())
                 .isPublic(request.isPublic())
                 .password(request.getPassword())
                 .daegukCode(generateDaegukCode())
@@ -107,5 +114,9 @@ public class DaegukService {
 
     public int calculateOngoingDays(LocalDate createDate) {
         return (int) ChronoUnit.DAYS.between(createDate, LocalDate.now()) + 1;
+    }
+
+    public List<Category> getDaegukCategories() {
+        return CategoryType.getCategoryList();
     }
 }
