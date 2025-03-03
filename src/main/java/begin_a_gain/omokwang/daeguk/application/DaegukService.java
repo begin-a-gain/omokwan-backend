@@ -109,6 +109,7 @@ public class DaegukService {
                         .ongoingDays(calculateOngoingDays(x.getCreateDate()))
                         .participants(x.getParticipants())
                         .maxParticipants(x.getMaxParticipants())
+                        .isPublic(x.isPublic())
                         .build()).toList();
     }
 
