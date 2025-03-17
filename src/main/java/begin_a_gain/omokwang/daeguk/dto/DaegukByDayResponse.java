@@ -27,4 +27,7 @@ public class DaegukByDayResponse {
     @Schema(description = "대국 공개 여부", example = "true")
     private boolean isPublic;
 
+    @Schema(description = "대국 완료 여부", example = "true")
+    private boolean isCompleted;
+
 }
