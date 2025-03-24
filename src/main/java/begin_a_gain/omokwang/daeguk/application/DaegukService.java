@@ -111,10 +111,7 @@ public class DaegukService {
     public boolean findDaegukStatusByday(Long daegukId, LocalDate daegukDate, Long userId) {
         Optional<DaegukStatus> daegukStatus = daegukStatusRepository.findByDaegukIdAndDaegukDateAndCreateId(daegukId,
                 daegukDate, userId);
-        if (daegukStatus.isPresent()) {
-            return daegukStatus.get().isCompleted();
-        }
-        return false;
+        return daegukStatus.map(DaegukStatus::isCompleted).orElse(false);
     }
 
     public int calculateOngoingDays(LocalDate createDate) {
