@@ -39,7 +39,7 @@ public class RoutineCompletion {
     private LocalDate date;
 
     @Enumerated(EnumType.STRING)
-    private CompletionStatus isCompleted = CompletionStatus.NOT_COMPLETED;
+    private CompletionStatus completed = CompletionStatus.NOT_COMPLETED;
 
     @Column(nullable = false)
     private LocalDate completedAt;

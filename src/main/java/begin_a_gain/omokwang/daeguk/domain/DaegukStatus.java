@@ -39,14 +39,14 @@ public class DaegukStatus {
     @Column(name = "daeguk_date", nullable = false)
     private LocalDate daegukDate;
 
-    @Column(name = "is_completed", nullable = false)
-    private boolean isCompleted;
+    @Column(name = "completed", nullable = false)
+    private boolean completed;
 
     @LastModifiedDate
     @Column(name = "completed_date", nullable = false)
     private LocalDate completedDate;
 
-    public DaegukStatus updateCompletion(boolean isCompleted) {
-        return new DaegukStatus(this.id, this.createId, this.daegukId, this.daegukDate, isCompleted, completedDate);
+    public void updateCompletion(boolean completed) {
+        this.completed = completed;
     }
 }

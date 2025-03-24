@@ -6,6 +6,7 @@ import begin_a_gain.omokwang.daeguk.dto.CreateDaegukRequest;
 import begin_a_gain.omokwang.daeguk.dto.CreateDaegukResponse;
 import begin_a_gain.omokwang.daeguk.dto.DaegukByDayResponse;
 import begin_a_gain.omokwang.daeguk.dto.DaegukStatusRequest;
+import begin_a_gain.omokwang.daeguk.dto.DaegukStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -74,11 +75,11 @@ public class DaegukController {
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
     @PutMapping("/daeguks/status")
-    public void daegukStatus(
+    public ResponseEntity<DaegukStatusResponse> daegukStatus(
             @Parameter(description = "대국 상태 입력 날짜 (YYYY-MM-DD 형식)", example = "2025-03-01")
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestBody DaegukStatusRequest request) {
         var response = daegukService.daegukStatus(date, request);
-        return ResponseEntity.status(HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

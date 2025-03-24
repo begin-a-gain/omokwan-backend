@@ -19,6 +19,6 @@ public class FindDaegukResponse {
     private int participants;
 
     @Schema(description = "대국 완료 여부", example = "true|false")
-    private boolean isCompleted;
+    private boolean completed;
 
 }

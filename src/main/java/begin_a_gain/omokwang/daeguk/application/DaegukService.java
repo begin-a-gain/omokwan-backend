@@ -56,16 +56,9 @@ public class DaegukService {
             throw new IllegalArgumentException("Invalid category code: " + request.getCategoryCode());
         }
 
-        return Daeguk.builder()
-                .createId(user)
-                .name(request.getName())
-                .maxParticipants(request.getMaxParticipants())
-                .participants(1)
-                .category(request.getCategoryCode())
-                .isPublic(request.isPublic())
-                .password(request.getPassword())
-                .daegukCode(generateDaegukCode())
-                .build();
+        return Daeguk.builder().createId(user).name(request.getName()).maxParticipants(request.getMaxParticipants())
+                .participants(1).category(request.getCategoryCode()).isPublic(request.isPublic())
+                .password(request.getPassword()).daegukCode(generateDaegukCode()).build();
     }
 
     private void saveDaegukDays(Daeguk daeguk, List<Integer> dayType) {
@@ -109,23 +102,19 @@ public class DaegukService {
 
         var daegukList = repository.findDaegukByUserIdAndDayOfWeek(userId, dayOfWeek);
 
-        return daegukList.stream()
-                .map(x -> DaegukByDayResponse.builder()
-                        .daegukId(x.getId())
-                        .name(x.getName())
-                        .ongoingDays(calculateOngoingDays(x.getCreateDate()))
-                        .participants(x.getParticipants())
-                        .maxParticipants(x.getMaxParticipants())
-                        .isPublic(x.isPublic())
-                        .isCompleted(findDaegukStatusByday(x.getId(), date, userId))
-                        .build())
-                .toList();
+        return daegukList.stream().map(x -> DaegukByDayResponse.builder().daegukId(x.getId()).name(x.getName())
+                .ongoingDays(calculateOngoingDays(x.getCreateDate())).participants(x.getParticipants())
+                .maxParticipants(x.getMaxParticipants()).isPublic(x.isPublic())
+                .completed(findDaegukStatusByday(x.getId(), date, userId)).build()).toList();
     }
 
     public boolean findDaegukStatusByday(Long daegukId, LocalDate daegukDate, Long userId) {
-        Optional<DaegukStatus> daegukStatus = daegukStatusRepository
-                .findByDaegukIdAndDaegukDateAndCreateId(daegukId, daegukDate, userId);
-        return daegukStatus.isPresent();
+        Optional<DaegukStatus> daegukStatus = daegukStatusRepository.findByDaegukIdAndDaegukDateAndCreateId(daegukId,
+                daegukDate, userId);
+        if (daegukStatus.isPresent()) {
+            return daegukStatus.get().isCompleted();
+        }
+        return false;
     }
 
     public int calculateOngoingDays(LocalDate createDate) {
@@ -136,27 +125,25 @@ public class DaegukService {
         return CategoryType.getCategoryList();
     }
 
+    @Transactional
     public DaegukStatusResponse daegukStatus(LocalDate daegukDate, DaegukStatusRequest request) {
-        // TODO 하루전까지 추가 가능
-
+        System.out.println("요청 값: " + request.isCompleted());
         var socialId = SecurityUtil.getCurrentUserSocialId();
         var user = userRepository.findBySocialId(socialId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
 
-        Optional<DaegukStatus> existingStatus = daegukStatusRepository
-                .findByDaegukIdAndDaegukDateAndCreateId(request.getDaegukId(), daegukDate, user.getId());
+        Optional<DaegukStatus> existingStatus = daegukStatusRepository.findByDaegukIdAndDaegukDateAndCreateId(
+                request.getDaegukId(), daegukDate, user.getId());
 
         if (existingStatus.isPresent()) {
             DaegukStatus daegukStatusInfo = existingStatus.get();
+            System.out.println("기존 DB 값: " + daegukStatusInfo.isCompleted());
             daegukStatusInfo.updateCompletion(request.isCompleted());
+            System.out.println("변경 후 값: " + daegukStatusInfo.isCompleted());
             daegukStatusRepository.save(daegukStatusInfo);
         } else {
-            DaegukStatus newStatus = DaegukStatus.builder()
-                    .createId(user.getId())
-                    .daegukId(request.getDaegukId())
-                    .daegukDate(daegukDate)
-                    .isCompleted(request.isCompleted())
-                    .build();
+            DaegukStatus newStatus = DaegukStatus.builder().createId(user.getId()).daegukId(request.getDaegukId())
+                    .daegukDate(daegukDate).completed(request.isCompleted()).build();
             daegukStatusRepository.save(newStatus);
         }
 

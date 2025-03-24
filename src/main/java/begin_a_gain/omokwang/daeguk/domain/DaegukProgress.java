@@ -32,5 +32,5 @@ public class DaegukProgress {
     @Column(nullable = false)
     private LocalDate pregressDate;
 
-    private boolean isCompleted;
+    private boolean completed;
 }

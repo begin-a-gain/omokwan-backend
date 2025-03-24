@@ -9,5 +9,5 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DaegukStatusResponse {
     @Schema(description = "대국 완료 여부", example = "true")
-    private final boolean isCompleted;
+    private final boolean completed;
 }

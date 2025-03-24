@@ -10,6 +10,6 @@ public class DaegukStatusRequest {
     private Long daegukId;
 
     @Schema(description = "대국 완료", example = "true")
-    private boolean isCompleted;
+    private boolean completed;
 
 }

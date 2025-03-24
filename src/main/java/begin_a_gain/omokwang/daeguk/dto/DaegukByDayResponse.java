@@ -28,6 +28,6 @@ public class DaegukByDayResponse {
     private boolean isPublic;
 
     @Schema(description = "대국 완료 여부", example = "true")
-    private boolean isCompleted;
+    private boolean completed;
 
 }
