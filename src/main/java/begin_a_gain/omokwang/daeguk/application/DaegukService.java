@@ -5,12 +5,16 @@ import begin_a_gain.omokwang.daeguk.domain.Category;
 import begin_a_gain.omokwang.daeguk.domain.CategoryType;
 import begin_a_gain.omokwang.daeguk.domain.Daeguk;
 import begin_a_gain.omokwang.daeguk.domain.DaegukDay;
+import begin_a_gain.omokwang.daeguk.domain.DaegukStatus;
 import begin_a_gain.omokwang.daeguk.domain.DayType;
 import begin_a_gain.omokwang.daeguk.dto.CreateDaegukRequest;
 import begin_a_gain.omokwang.daeguk.dto.CreateDaegukResponse;
 import begin_a_gain.omokwang.daeguk.dto.DaegukByDayResponse;
+import begin_a_gain.omokwang.daeguk.dto.DaegukStatusRequest;
+import begin_a_gain.omokwang.daeguk.dto.DaegukStatusResponse;
 import begin_a_gain.omokwang.daeguk.repository.DaegukDayRepository;
 import begin_a_gain.omokwang.daeguk.repository.DaegukRepository;
+import begin_a_gain.omokwang.daeguk.repository.DaegukStatusRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -18,6 +22,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +34,7 @@ public class DaegukService {
     private final DaegukRepository repository;
     private final UserRepository userRepository;
     private final DaegukDayRepository daegukDayRepository;
+    private final DaegukStatusRepository daegukStatusRepository;
 
     private static final int MAX_ATTEMPTS = 50;
 
@@ -50,16 +56,9 @@ public class DaegukService {
             throw new IllegalArgumentException("Invalid category code: " + request.getCategoryCode());
         }
 
-        return Daeguk.builder()
-                .createId(user)
-                .name(request.getName())
-                .maxParticipants(request.getMaxParticipants())
-                .participants(1)
-                .category(request.getCategoryCode())
-                .isPublic(request.isPublic())
-                .password(request.getPassword())
-                .daegukCode(generateDaegukCode())
-                .build();
+        return Daeguk.builder().createId(user).name(request.getName()).maxParticipants(request.getMaxParticipants())
+                .participants(1).category(request.getCategoryCode()).isPublic(request.isPublic())
+                .password(request.getPassword()).daegukCode(generateDaegukCode()).build();
     }
 
     private void saveDaegukDays(Daeguk daeguk, List<Integer> dayType) {
@@ -102,16 +101,17 @@ public class DaegukService {
         var userId = userRepository.findBySocialId(socialId).map(User::getId).orElse(null);
 
         var daegukList = repository.findDaegukByUserIdAndDayOfWeek(userId, dayOfWeek);
-        return daegukList.stream()
-                .map(x -> DaegukByDayResponse.builder()
-                        .daegukId(x.getId())
-                        .name(x.getName())
-                        .ongoingDays(calculateOngoingDays(x.getCreateDate()))
-                        .participants(x.getParticipants())
-                        .maxParticipants(x.getMaxParticipants())
-                        .isPublic(x.isPublic())
-                        .build())
-                .toList();
+
+        return daegukList.stream().map(x -> DaegukByDayResponse.builder().daegukId(x.getId()).name(x.getName())
+                .ongoingDays(calculateOngoingDays(x.getCreateDate())).participants(x.getParticipants())
+                .maxParticipants(x.getMaxParticipants()).isPublic(x.isPublic())
+                .completed(findDaegukStatusByday(x.getId(), date, userId)).build()).toList();
+    }
+
+    public boolean findDaegukStatusByday(Long daegukId, LocalDate daegukDate, Long userId) {
+        Optional<DaegukStatus> daegukStatus = daegukStatusRepository.findByDaegukIdAndDaegukDateAndCreateId(daegukId,
+                daegukDate, userId);
+        return daegukStatus.map(DaegukStatus::isCompleted).orElse(false);
     }
 
     public int calculateOngoingDays(LocalDate createDate) {
@@ -120,5 +120,30 @@ public class DaegukService {
 
     public List<Category> getDaegukCategories() {
         return CategoryType.getCategoryList();
+    }
+
+    @Transactional
+    public DaegukStatusResponse daegukStatus(LocalDate daegukDate, DaegukStatusRequest request) {
+        System.out.println("요청 값: " + request.isCompleted());
+        var socialId = SecurityUtil.getCurrentUserSocialId();
+        var user = userRepository.findBySocialId(socialId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
+
+        Optional<DaegukStatus> existingStatus = daegukStatusRepository.findByDaegukIdAndDaegukDateAndCreateId(
+                request.getDaegukId(), daegukDate, user.getId());
+
+        if (existingStatus.isPresent()) {
+            DaegukStatus daegukStatusInfo = existingStatus.get();
+            System.out.println("기존 DB 값: " + daegukStatusInfo.isCompleted());
+            daegukStatusInfo.updateCompletion(request.isCompleted());
+            System.out.println("변경 후 값: " + daegukStatusInfo.isCompleted());
+            daegukStatusRepository.save(daegukStatusInfo);
+        } else {
+            DaegukStatus newStatus = DaegukStatus.builder().createId(user.getId()).daegukId(request.getDaegukId())
+                    .daegukDate(daegukDate).completed(request.isCompleted()).build();
+            daegukStatusRepository.save(newStatus);
+        }
+
+        return new DaegukStatusResponse(request.isCompleted());
     }
 }
