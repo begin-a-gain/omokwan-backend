@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,7 @@ public class DaegukService {
     private final UserRepository userRepository;
     private final DaegukDayRepository daegukDayRepository;
     private final DaegukStatusRepository daegukStatusRepository;
+    private final PasswordEncoder passwordEncoder;
 
     private static final int MAX_ATTEMPTS = 50;
 
@@ -56,9 +58,17 @@ public class DaegukService {
             throw new IllegalArgumentException("Invalid category code: " + request.getCategoryCode());
         }
 
-        return Daeguk.builder().createId(user).name(request.getName()).maxParticipants(request.getMaxParticipants())
-                .participants(1).category(request.getCategoryCode()).isPublic(request.isPublic())
-                .password(request.getPassword()).daegukCode(generateDaegukCode()).build();
+        String encodedPassword = request.isPublic() ? null : passwordEncoder.encode(request.getPassword());
+
+        return Daeguk.builder()
+                .createId(user)
+                .name(request.getName())
+                .maxParticipants(request.getMaxParticipants())
+                .participants(1)
+                .category(request.getCategoryCode())
+                .isPublic(request.isPublic())
+                .password(encodedPassword)
+                .daegukCode(generateDaegukCode()).build();
     }
 
     private void saveDaegukDays(Daeguk daeguk, List<Integer> dayType) {

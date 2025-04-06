@@ -49,7 +49,7 @@ public class Daeguk {
     private boolean isPublic;
 
     @Column(name = "password")
-    private int password;
+    private String password;
 
     @Column(name = "daeguk_code", nullable = false, unique = true)
     private String daegukCode;

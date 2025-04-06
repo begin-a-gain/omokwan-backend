@@ -55,7 +55,7 @@ public class DaegukServiceTest {
                 .category("exercise")
                 .isPublic(true)
                 .daegukCode("1234")
-                .password(1234)
+                .password("1234")
                 .build();
 
         DaegukDay daegukDay = DaegukDay.builder().daeguk(daeguk).dayOfWeek(1).build();
