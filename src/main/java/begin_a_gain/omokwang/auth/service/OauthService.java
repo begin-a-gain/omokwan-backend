@@ -6,7 +6,6 @@ import begin_a_gain.omokwang.exception.ErrorCode;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,16 +22,10 @@ public class OauthService {
         return new OauthDto(getTokens(user.getSocialId(), response), user.getSocialId());
     }
 
-    //액세스토큰, 리프레시토큰 생성
     public String getTokens(Long id, HttpServletResponse response) {
         final String accessToken = jwtTokenService.createAccessToken(id.toString());
         final String refreshToken = jwtTokenService.createRefreshToken();
-
-        Optional<User> optionalUserInfo = userService.findBySocialId(id);
-        optionalUserInfo.ifPresent(user -> {
-            user.setRefreshToken(refreshToken);
-            userService.updateRefreshToken(user);
-        });
+        userService.updateRefreshToken(id, refreshToken);
 
         jwtTokenService.addRefreshTokenToCookie(refreshToken, response);
         return accessToken;

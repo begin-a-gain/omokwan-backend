@@ -2,6 +2,7 @@ package begin_a_gain.omokwang.user.service;
 
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,10 +29,12 @@ public class UserService {
         return userRepository.findByRefreshToken(refreshToken);
     }
 
-    public void updateRefreshToken(User user) {
-        Long socialId = user.getSocialId();
-        String refreshToken = user.getRefreshToken();
-        userRepository.updateRefreshToken(socialId, refreshToken);
+    @Transactional
+    public void updateRefreshToken(Long id, String refreshToken) {
+        User user = userRepository.findBySocialId(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setRefreshToken(refreshToken);
     }
 
     public boolean isSignUpComplete(long socialId) {
