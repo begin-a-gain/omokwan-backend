@@ -1,5 +1,6 @@
-package begin_a_gain.omokwang.daeguk.domain;
+package begin_a_gain.omokwang.daeguk_detail.domain;
 
+import begin_a_gain.omokwang.daeguk.domain.Daeguk;
 import begin_a_gain.omokwang.user.dto.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,7 +13,15 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "daeguk_participant", uniqueConstraints = {@UniqueConstraint(columnNames = {"dauguk_id", "user_id"})})
 public class DaegukParticipant {
@@ -31,7 +40,7 @@ public class DaegukParticipant {
 
     @PrePersist
     public void prePersist() {
-        this.joinDate = LocalDate.now(); // 자동으로 현재 날짜 설정
+        this.joinDate = LocalDate.now();
     }
 
 }

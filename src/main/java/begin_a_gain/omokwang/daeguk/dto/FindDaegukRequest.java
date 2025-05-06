@@ -21,8 +21,6 @@ public class FindDaegukRequest {
 
     @Schema(description = "공개 여부", example = "true")
     private boolean isPublic;
-
-    @Schema(description = "비밀번호", example = "1234")
-    private int password;
+    
 
 }

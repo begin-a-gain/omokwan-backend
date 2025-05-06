@@ -8,7 +8,6 @@ import begin_a_gain.omokwang.daeguk.repository.DaegukDayRepository;
 import begin_a_gain.omokwang.daeguk.repository.DaegukRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 @DisplayName("대국 테스트")
 @ActiveProfiles("local")
@@ -55,7 +55,7 @@ public class DaegukServiceTest {
                 .category("exercise")
                 .isPublic(true)
                 .daegukCode("1234")
-                .password(1234)
+                .password("1234")
                 .build();
 
         DaegukDay daegukDay = DaegukDay.builder().daeguk(daeguk).dayOfWeek(1).build();

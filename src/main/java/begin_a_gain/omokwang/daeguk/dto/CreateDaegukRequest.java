@@ -25,6 +25,6 @@ public class CreateDaegukRequest {
     private boolean isPublic;
 
     @Schema(description = "비밀번호", example = "1234")
-    private int password;
+    private String password;
 
 }

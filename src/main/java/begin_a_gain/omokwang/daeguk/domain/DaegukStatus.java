@@ -6,7 +6,6 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
@@ -30,10 +29,10 @@ public class DaegukStatus {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(name = "create_id", nullable = false)
+    @Column(name = "create_id", nullable = false)
     private Long createId;
 
-    @JoinColumn(name = "daeguk_id", nullable = false)
+    @Column(name = "daeguk_id", nullable = false)
     private Long daegukId;
 
     @Column(name = "daeguk_date", nullable = false)
