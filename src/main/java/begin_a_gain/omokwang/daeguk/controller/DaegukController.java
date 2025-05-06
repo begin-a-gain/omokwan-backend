@@ -45,7 +45,7 @@ public class DaegukController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @Operation(summary = "대국 찾기", description = "날짜별 대국 찾기")
+    @Operation(summary = "내 대국 찾기", description = "날짜별 내 대국 조회")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DaegukByDayResponse.class))),
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
