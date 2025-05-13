@@ -46,7 +46,6 @@ public class DaegukServiceTest {
                 .build();
 
         User savedUser = userRepository.save(user);
-
         Daeguk daeguk = Daeguk.builder()
                 .createId(savedUser)
                 .name("Test Daeguk")

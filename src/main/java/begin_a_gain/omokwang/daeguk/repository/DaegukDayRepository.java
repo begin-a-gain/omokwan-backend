@@ -5,5 +5,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 
 public interface DaegukDayRepository extends JpaRepository<DaegukDay, Long> {
-
 }

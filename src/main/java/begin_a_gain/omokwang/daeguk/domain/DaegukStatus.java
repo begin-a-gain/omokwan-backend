@@ -45,6 +45,12 @@ public class DaegukStatus {
     @Column(name = "completed_date", nullable = false)
     private LocalDate completedDate;
 
+    @Column(name = "is_combo")
+    private boolean isCombo;
+
+    @Column(name = "combo_days")
+    private int comboDays;
+
     public void updateCompletion(boolean completed) {
         this.completed = completed;
     }

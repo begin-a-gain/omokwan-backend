@@ -39,6 +39,8 @@ public class DaegukService {
     private final PasswordEncoder passwordEncoder;
 
     private static final int MAX_ATTEMPTS = 50;
+    private static final int DEFAULT_COMBO_DAYS = 1;
+    private static final int COMBO_MIN_DAYS = 5;
 
     @Transactional
     public CreateDaegukResponse createDaeguk(CreateDaegukRequest request) {
@@ -134,26 +136,58 @@ public class DaegukService {
 
     @Transactional
     public DaegukStatusResponse daegukStatus(LocalDate daegukDate, DaegukStatusRequest request) {
-        System.out.println("요청 값: " + request.isCompleted());
-        var socialId = SecurityUtil.getCurrentUserSocialId();
-        var user = userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
 
-        Optional<DaegukStatus> existingStatus = daegukStatusRepository.findByDaegukIdAndDaegukDateAndCreateId(
-                request.getDaegukId(), daegukDate, user.getId());
+        var comboDays = getComboDays(request);
+        var isCombo = comboDays >= COMBO_MIN_DAYS;
 
-        if (existingStatus.isPresent()) {
-            DaegukStatus daegukStatusInfo = existingStatus.get();
-            System.out.println("기존 DB 값: " + daegukStatusInfo.isCompleted());
-            daegukStatusInfo.updateCompletion(request.isCompleted());
-            System.out.println("변경 후 값: " + daegukStatusInfo.isCompleted());
-            daegukStatusRepository.save(daegukStatusInfo);
-        } else {
-            DaegukStatus newStatus = DaegukStatus.builder().createId(user.getId()).daegukId(request.getDaegukId())
-                    .daegukDate(daegukDate).completed(request.isCompleted()).build();
-            daegukStatusRepository.save(newStatus);
-        }
+        DaegukStatus newStatus = DaegukStatus.builder()
+                .createId(getUserId())
+                .daegukId(request.getDaegukId())
+                .daegukDate(daegukDate)
+                .completed(request.isCompleted())
+                .isCombo(isCombo)
+                .comboDays(comboDays)
+                .build();
+        daegukStatusRepository.save(newStatus);
 
         return new DaegukStatusResponse(request.isCompleted());
     }
+
+    private int getComboDays(DaegukStatusRequest request) {
+        var daegukDays = getDaegukDays(request);
+        var recentDaegukDate = getRecentDaegukDate(daegukDays);
+        var recentDaeguk = daegukStatusRepository.findByDaegukIdAndDaegukDateAndCreateId(request.getDaegukId(),
+                recentDaegukDate, getUserId());
+        return recentDaeguk.map(daegukStatus -> daegukStatus.getComboDays() + 1).orElse(DEFAULT_COMBO_DAYS);
+    }
+
+    private List<Integer> getDaegukDays(DaegukStatusRequest request) {
+        return daegukDayRepository.findById(request.getDaegukId())
+                .stream()
+                .map(DaegukDay::getDayOfWeek)
+                .toList();
+    }
+
+    private Long getUserId() {
+        var socialId = SecurityUtil.getCurrentUserSocialId();
+        var user = userRepository.findBySocialId(socialId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
+        return user.getId();
+    }
+
+
+    public LocalDate getRecentDaegukDate(List<Integer> daegukDays) {
+        var today = LocalDate.now();
+        var todayValue = today.getDayOfWeek().getValue();
+
+        var closestPast = daegukDays.stream()
+                .filter(day -> day <= todayValue)
+                .max(Integer::compareTo);
+
+        int targetDay = closestPast.orElseGet(() -> daegukDays.stream().max(Integer::compareTo).get());
+
+        int diff = (todayValue >= targetDay) ? todayValue - targetDay : 7 - (targetDay - todayValue);
+        return today.minusDays(diff);
+    }
+
 }

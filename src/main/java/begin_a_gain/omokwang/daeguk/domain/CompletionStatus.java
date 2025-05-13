@@ -1,4 +1,4 @@
-package begin_a_gain.omokwang.completion.domain;
+package begin_a_gain.omokwang.daeguk.domain;
 
 public enum CompletionStatus {
     COMPLETED,
