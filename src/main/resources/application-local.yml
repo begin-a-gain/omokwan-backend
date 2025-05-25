@@ -6,7 +6,7 @@ jwt:
   refresh:
     token:
       expiration:
-        seconds: 1209600  # 14-day
+        seconds: 12096000  # 14-day # TODO:: change 1209600
   token:
     secret-key: itsepguyitsepguyitsepgyitsitsits
 

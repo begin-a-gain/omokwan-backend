@@ -1,6 +1,8 @@
 package begin_a_gain.omokwang.match.application;
 
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
+import begin_a_gain.omokwang.exception.CustomException;
+import begin_a_gain.omokwang.exception.ErrorCode;
 import begin_a_gain.omokwang.match.domain.Category;
 import begin_a_gain.omokwang.match.domain.CategoryType;
 import begin_a_gain.omokwang.match.domain.DayType;
@@ -10,7 +12,6 @@ import begin_a_gain.omokwang.match.domain.MatchStatus;
 import begin_a_gain.omokwang.match.dto.CreateMatchRequest;
 import begin_a_gain.omokwang.match.dto.CreateMatchResponse;
 import begin_a_gain.omokwang.match.dto.MatchByDayResponse;
-import begin_a_gain.omokwang.match.dto.MatchStatusRequest;
 import begin_a_gain.omokwang.match.dto.MatchStatusResponse;
 import begin_a_gain.omokwang.match.repository.MatchDayRepository;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
@@ -18,6 +19,8 @@ import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -40,6 +43,7 @@ public class MatchService {
 
     private static final int MAX_ATTEMPTS = 50;
     private static final int DEFAULT_COMBO_DAYS = 1;
+    private static final int DEFAULT_PARTICIPANT = 1;
     private static final int COMBO_MIN_DAYS = 5;
 
     @Transactional
@@ -66,7 +70,7 @@ public class MatchService {
                 .createId(user)
                 .name(request.getName())
                 .maxParticipants(request.getMaxParticipants())
-                .participants(1)
+                .participants(DEFAULT_PARTICIPANT)
                 .category(request.getCategoryCode())
                 .isPublic(request.isPublic())
                 .password(encodedPassword)
@@ -127,7 +131,7 @@ public class MatchService {
     }
 
     public int calculateOngoingDays(LocalDate createDate) {
-        return (int) ChronoUnit.DAYS.between(createDate, LocalDate.now()) + 1;
+        return (int) ChronoUnit.DAYS.between(createDate, LocalDate.now(ZoneOffset.UTC)) + 1;
     }
 
     public List<Category> getMatchCategories() {
@@ -135,34 +139,64 @@ public class MatchService {
     }
 
     @Transactional
-    public MatchStatusResponse matchStatus(LocalDate matchDate, MatchStatusRequest request) {
+    public MatchStatusResponse matchStatus(LocalDate matchDate, Long matchId) {
 
-        var comboDays = getComboDays(request);
-        var isCombo = comboDays >= COMBO_MIN_DAYS;
+        if (isNotToday(matchDate)) {
+            throw new CustomException(ErrorCode.BAD_REQUEST);
+        }
+        var userId = getUserId();
 
+        Optional<MatchStatus> existingStatus = matchStatusRepository.findByMatchIdAndMatchDateAndCreateId(
+                matchId, matchDate, userId);
+
+        if (isCompletedMatch(existingStatus)) {
+            var comboDays = existingStatus.map(MatchStatus::getComboDays).orElse(0);
+
+            if (comboDays == COMBO_MIN_DAYS) {
+                matchStatusRepository.resetRecentCombos(matchId, userId, false);
+            }
+            matchStatusRepository.deleteById(existingStatus.get().getId());
+            return new MatchStatusResponse(false);
+        }
+
+        var comboDays = getComboDays(matchId);
         MatchStatus newStatus = MatchStatus.builder()
                 .createId(getUserId())
-                .matchId(request.getMatchId())
+                .matchId(matchId)
                 .matchDate(matchDate)
-                .completed(request.isCompleted())
-                .isCombo(isCombo)
+                .completed(true)
+                .isCombo(comboDays >= COMBO_MIN_DAYS)
                 .comboDays(comboDays)
                 .build();
         matchStatusRepository.save(newStatus);
 
-        return new MatchStatusResponse(request.isCompleted());
+        if (comboDays == COMBO_MIN_DAYS) {
+            matchStatusRepository.resetRecentCombos(matchId, userId, true);
+        }
+        return new MatchStatusResponse(newStatus.isCompleted());
     }
 
-    private int getComboDays(MatchStatusRequest request) {
-        var matchDays = getMatchDays(request);
+    private boolean isNotToday(LocalDate matchDate) {
+        LocalDate todayKST = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        return !todayKST.equals(matchDate);
+    }
+
+    private boolean isCompletedMatch(Optional<MatchStatus> existingStatus) {
+        return existingStatus.isPresent();
+    }
+
+    private int getComboDays(Long matchId) {
+        var matchDays = getMatchDays(matchId);
         var recentMatchDate = getRecentMatchDate(matchDays);
-        var recentMatch = matchStatusRepository.findByMatchIdAndMatchDateAndCreateId(request.getMatchId(),
+        System.out.println("test::" + recentMatchDate);
+        var recentMatch = matchStatusRepository.findByMatchIdAndMatchDateAndCreateId(matchId,
                 recentMatchDate, getUserId());
+
         return recentMatch.map(matchStatus -> matchStatus.getComboDays() + 1).orElse(DEFAULT_COMBO_DAYS);
     }
 
-    private List<Integer> getMatchDays(MatchStatusRequest request) {
-        return matchDayRepository.findById(request.getMatchId())
+    private List<Integer> getMatchDays(Long matchId) {
+        return matchDayRepository.findAllByMatchId(matchId)
                 .stream()
                 .map(MatchDay::getDayOfWeek)
                 .toList();
@@ -177,11 +211,11 @@ public class MatchService {
 
 
     public LocalDate getRecentMatchDate(List<Integer> matchDays) {
-        var today = LocalDate.now();
+        var today = LocalDate.now(ZoneOffset.UTC);
         var todayValue = today.getDayOfWeek().getValue();
 
         var closestPast = matchDays.stream()
-                .filter(day -> day <= todayValue)
+                .filter(day -> day < todayValue)
                 .max(Integer::compareTo);
 
         int targetDay = closestPast.orElseGet(() -> matchDays.stream().max(Integer::compareTo).get());

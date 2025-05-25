@@ -5,7 +5,6 @@ import begin_a_gain.omokwang.match.domain.Category;
 import begin_a_gain.omokwang.match.dto.CreateMatchRequest;
 import begin_a_gain.omokwang.match.dto.CreateMatchResponse;
 import begin_a_gain.omokwang.match.dto.MatchByDayResponse;
-import begin_a_gain.omokwang.match.dto.MatchStatusRequest;
 import begin_a_gain.omokwang.match.dto.MatchStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +20,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -74,12 +74,15 @@ public class MatchController {
             @ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
-    @PutMapping("/matches/status")
+    @PutMapping("/matches/{matchId}/status")
     public ResponseEntity<MatchStatusResponse> matchStatus(
+            @PathVariable("matchId")
+            @Schema(example = "1")
+            Long matchId,
             @Parameter(description = "대국 상태 입력 날짜 (YYYY-MM-DD 형식)", example = "2025-03-01")
-            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestBody MatchStatusRequest request) {
-        var response = matchService.matchStatus(date, request);
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        var response = matchService.matchStatus(date, matchId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

@@ -1,20 +1,19 @@
 package begin_a_gain.omokwang.exception;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+@Slf4j
 @ControllerAdvice // 전역 예외 처리 클래스
 public class GlobalExceptionHandler {
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex) {
-        logger.error("[CustomException] errCode : " + ex.getErrorCode());
-        logger.error("[CustomException] errMsg : " + ex.getMessage());
+        log.error("[CustomException] errCode : " + ex.getErrorCode());
+        log.error("[CustomException] errMsg : " + ex.getMessage());
         return new ResponseEntity(
                 new ErrorResponse(ex.getMessage()),
                 ex.getErrorCode().getHttpStatus()
@@ -23,7 +22,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
-        logger.error("[RuntimeException] errMsg : " + ex.getMessage());
+        log.error("[RuntimeException] errMsg : " + ex.getMessage());
         return new ResponseEntity(
                 new ErrorResponse(ex.getMessage()),
                 HttpStatus.INTERNAL_SERVER_ERROR
@@ -32,7 +31,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(RuntimeException ex) {
-        logger.error("[Exception] errMsg : " + ex.getMessage());
+        log.error("[Exception] errMsg : " + ex.getMessage());
         return new ResponseEntity(
                 new ErrorResponse(ex.getMessage()),
                 HttpStatus.INTERNAL_SERVER_ERROR
