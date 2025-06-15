@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/login/**", "/token/refresh").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Swagger 관련 경로
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/user/**").hasAuthority(UserRole.USER.getRole())
                         .anyRequest().authenticated())
                 .sessionManagement(

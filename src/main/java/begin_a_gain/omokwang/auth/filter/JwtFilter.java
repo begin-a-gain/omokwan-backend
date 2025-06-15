@@ -30,7 +30,15 @@ public class JwtFilter extends GenericFilterBean {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
-        logger.info("[JwtFilter] : " + httpServletRequest.getRequestURL().toString());
+
+        String path = httpServletRequest.getRequestURI();
+        logger.info("[JwtFilter] : " + path.toString());
+
+        if (path.startsWith("/actuator/health") || path.startsWith("/actuator/info")) {
+            filterChain.doFilter(servletRequest, servletResponse);
+            return;
+        }
+
         String jwt = resolveToken(httpServletRequest);
 
         if (StringUtils.hasText(jwt) && jwtTokenService.validateToken(jwt)) {
