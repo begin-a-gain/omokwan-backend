@@ -12,7 +12,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "match_progress", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"match_id", "user_id", "progress_date"})})
@@ -30,7 +36,8 @@ public class MatchProgress {
     MatchInfo match;
 
     @Column(nullable = false)
-    private LocalDate pregressDate;
+    private LocalDate startDate;
 
-    private boolean completed;
+    @Column(nullable = true)
+    private LocalDate endDate;
 }

@@ -13,7 +13,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,7 +41,7 @@ public class MatchParticipant {
 
     @PrePersist
     public void prePersist() {
-        this.joinDate = LocalDate.now(ZoneOffset.UTC);
+        this.joinDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
     }
 
 }

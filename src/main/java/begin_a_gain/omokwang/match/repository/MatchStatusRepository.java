@@ -2,6 +2,7 @@ package begin_a_gain.omokwang.match.repository;
 
 import begin_a_gain.omokwang.match.domain.MatchStatus;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -28,5 +29,6 @@ public interface MatchStatusRepository extends JpaRepository<MatchStatus, Long> 
     void resetRecentCombos(@Param("matchId") Long matchId, @Param("createId") Long createId,
                            @Param("isCombo") boolean isCombo);
 
-
+    List<MatchStatus> findByMatchIdAndMatchDateBetween(Long matchId, LocalDate startDate,
+                                                       LocalDate endDate);
 }
