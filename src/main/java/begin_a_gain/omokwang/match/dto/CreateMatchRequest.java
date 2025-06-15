@@ -1,5 +1,6 @@
 package begin_a_gain.omokwang.match.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -21,6 +22,7 @@ public class CreateMatchRequest {
     @Schema(description = "대국 카테고리 코드", example = "1")
     private String categoryCode;
 
+    @JsonProperty("isPublic")
     @Schema(description = "공개 여부", example = "true")
     private boolean isPublic;
 
