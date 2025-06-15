@@ -90,7 +90,7 @@ public class MatchController {
 
     @Operation(summary = "대국 메인 보드", description = "대국 메인 보드")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Category.class))),
+            @ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MatchBoardResponse.class))),
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
     @GetMapping("/matches/{matchId}/board")
