@@ -2,8 +2,10 @@ package begin_a_gain.omokwang.match.controller;
 
 import begin_a_gain.omokwang.match.application.MatchService;
 import begin_a_gain.omokwang.match.domain.Category;
+import begin_a_gain.omokwang.match.domain.MatchBoardResponse;
 import begin_a_gain.omokwang.match.dto.CreateMatchRequest;
 import begin_a_gain.omokwang.match.dto.CreateMatchResponse;
+import begin_a_gain.omokwang.match.dto.MatchBoardRequest;
 import begin_a_gain.omokwang.match.dto.MatchByDayResponse;
 import begin_a_gain.omokwang.match.dto.MatchStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -84,5 +86,31 @@ public class MatchController {
     ) {
         var response = matchService.matchStatus(date, matchId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary = "대국 메인 보드", description = "대국 메인 보드")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Category.class))),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
+    })
+    @GetMapping("/matches/{matchId}/board")
+    public ResponseEntity<MatchBoardResponse> getMatchBoard(
+            @PathVariable("matchId") @Schema(example = "1") Long matchId,
+            @Parameter(description = "(YYYY-MM-DD)", example = "2025-12-01")
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @Parameter(description = "Page Size", example = "20")
+            @RequestParam("size") int size
+    ) {
+        var request = convertToRequest(matchId, from, size);
+        var response = matchService.getBoardForMatch(request);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    private static MatchBoardRequest convertToRequest(Long matchId, LocalDate date, int size) {
+        return MatchBoardRequest.builder()
+                .matchId(matchId)
+                .date(date)
+                .pageSize(size)
+                .build();
     }
 }

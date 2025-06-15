@@ -1,31 +1,42 @@
 package begin_a_gain.omokwang.match.application;
 
+import static begin_a_gain.omokwang.match.domain.CompletionStatus.COMPLETED;
+import static begin_a_gain.omokwang.match.domain.CompletionStatus.NOT_COMPLETED;
+
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
 import begin_a_gain.omokwang.exception.CustomException;
 import begin_a_gain.omokwang.exception.ErrorCode;
 import begin_a_gain.omokwang.match.domain.Category;
 import begin_a_gain.omokwang.match.domain.CategoryType;
 import begin_a_gain.omokwang.match.domain.DayType;
+import begin_a_gain.omokwang.match.domain.MatchBoardResponse;
 import begin_a_gain.omokwang.match.domain.MatchDay;
 import begin_a_gain.omokwang.match.domain.MatchInfo;
+import begin_a_gain.omokwang.match.domain.MatchProgress;
 import begin_a_gain.omokwang.match.domain.MatchStatus;
 import begin_a_gain.omokwang.match.dto.CreateMatchRequest;
 import begin_a_gain.omokwang.match.dto.CreateMatchResponse;
+import begin_a_gain.omokwang.match.dto.MatchBoardRequest;
 import begin_a_gain.omokwang.match.dto.MatchByDayResponse;
 import begin_a_gain.omokwang.match.dto.MatchStatusResponse;
+import begin_a_gain.omokwang.match.dto.match_board.DateStatus;
+import begin_a_gain.omokwang.match.dto.match_board.UserInfo;
+import begin_a_gain.omokwang.match.dto.match_board.UserStatus;
 import begin_a_gain.omokwang.match.repository.MatchDayRepository;
+import begin_a_gain.omokwang.match.repository.MatchProgressRepository;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,6 +50,7 @@ public class MatchService {
     private final UserRepository userRepository;
     private final MatchDayRepository matchDayRepository;
     private final MatchStatusRepository matchStatusRepository;
+    private final MatchProgressRepository matchProgressRepository;
     private final PasswordEncoder passwordEncoder;
 
     private static final int MAX_ATTEMPTS = 50;
@@ -49,14 +61,24 @@ public class MatchService {
     @Transactional
     public CreateMatchResponse createMatch(CreateMatchRequest request) {
 
-        long socialId = SecurityUtil.getCurrentUserSocialId();
-
-        User user = userRepository.findBySocialId(socialId)
+        var socialId = SecurityUtil.getCurrentUserSocialId();
+        var user = userRepository.findBySocialId(socialId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
-        MatchInfo match = mapToMatch(request, user);
-        MatchInfo savedMatch = repository.save(match);
+        var match = mapToMatch(request, user);
+
+        var savedMatch = repository.save(match);
         saveMatchDays(match, request.getDayType());
+        saveMatchParticipantProgress(user, match);
         return CreateMatchResponse.builder().matchId(savedMatch.getId()).build();
+    }
+
+    private void saveMatchParticipantProgress(User user, MatchInfo match) {
+        var matchProgressRequest = MatchProgress.builder()
+                .user(user)
+                .match(match)
+                .startDate(LocalDate.now(ZoneId.of("Asia/Seoul")))
+                .build();
+        matchProgressRepository.save(matchProgressRequest);
     }
 
     private MatchInfo mapToMatch(CreateMatchRequest request, User user) {
@@ -131,7 +153,7 @@ public class MatchService {
     }
 
     public int calculateOngoingDays(LocalDate createDate) {
-        return (int) ChronoUnit.DAYS.between(createDate, LocalDate.now(ZoneOffset.UTC)) + 1;
+        return (int) ChronoUnit.DAYS.between(createDate, LocalDate.now(ZoneId.of("Asia/Seoul"))) + 1;
     }
 
     public List<Category> getMatchCategories() {
@@ -211,7 +233,7 @@ public class MatchService {
 
 
     public LocalDate getRecentMatchDate(List<Integer> matchDays) {
-        var today = LocalDate.now(ZoneOffset.UTC);
+        var today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         var todayValue = today.getDayOfWeek().getValue();
 
         var closestPast = matchDays.stream()
@@ -222,6 +244,64 @@ public class MatchService {
 
         int diff = (todayValue >= targetDay) ? todayValue - targetDay : 7 - (targetDay - todayValue);
         return today.minusDays(diff);
+    }
+
+    public MatchBoardResponse getBoardForMatch(MatchBoardRequest request) {
+        return MatchBoardResponse.builder()
+                .users(getUserInfo(request.getMatchId()))
+                .dates(getMatchDates(request))
+                .nextCursor(getNextCursor(request))
+                .build();
+    }
+
+    private List<UserInfo> getUserInfo(Long matchId) {
+        var users = matchProgressRepository.findUsersByMatchId(matchId);
+
+        return users.stream()
+                .map(user -> new UserInfo(user.getId(), user.getNickname()))
+                .toList();
+    }
+
+    private List<DateStatus> getMatchDates(MatchBoardRequest request) {
+
+        var matchStatuses = getMatchStatuses(request);
+
+        var dateToStatuses = matchStatuses.stream()
+                .collect(Collectors.groupingBy(
+                        MatchStatus::getMatchDate,
+                        Collectors.mapping(status -> new UserStatus(
+                                status.getCreateId(),
+                                status.isCompleted() ? COMPLETED : NOT_COMPLETED,
+                                status.getComboDays(),
+                                status.isCombo()
+                        ), Collectors.toList())
+                ));
+
+        var endDate = request.getDate();
+        var pageSize = request.getPageSize();
+        return Stream.iterate(endDate, date -> date.minusDays(1))
+                .limit(pageSize)
+                .map(date -> new DateStatus(
+                        date.toString(),
+                        dateToStatuses.getOrDefault(date, List.of())
+                ))
+                .toList();
+    }
+
+    private List<MatchStatus> getMatchStatuses(MatchBoardRequest request) {
+        var endDate = request.getDate();
+        var pageSize = request.getPageSize();
+        var startDate = endDate.minusDays(pageSize - 1L);
+
+        return matchStatusRepository.findByMatchIdAndMatchDateBetween(
+                request.getMatchId(),
+                startDate,
+                endDate);
+    }
+
+    private LocalDate getNextCursor(MatchBoardRequest request) {
+        var startDate = request.getDate();
+        return startDate.minusDays(request.getPageSize());
     }
 
 }
