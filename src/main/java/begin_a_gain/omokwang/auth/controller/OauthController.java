@@ -38,7 +38,7 @@ public class OauthController {
             @ApiResponse(responseCode = "200", description = "성공",
                     content = {@Content(schema = @Schema(implementation = OauthResponseDto.class))}),
     })
-    @PostMapping("/login/oauth/{provider}")
+    @PostMapping("/auth/login/{provider}")
     public OauthResponseDto login(@PathVariable("provider") @Schema(example = "kakao, apple") String provider,
                                   @RequestBody OauthRequestDto oauthRequestDto,
                                   HttpServletResponse response) {
@@ -64,7 +64,7 @@ public class OauthController {
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
             @ApiResponse(responseCode = "401", description = "유효하지않은 리프레시 토큰입니다.", content = @Content)
     })
-    @PostMapping("/login/token/refresh")
+    @PostMapping("/auth/token/refresh")
     public RefreshTokenResponseDto tokenRefresh(HttpServletRequest request) {
         RefreshTokenResponseDto refreshTokenResponseDto = new RefreshTokenResponseDto();
         Cookie[] list = request.getCookies();
