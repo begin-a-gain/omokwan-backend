@@ -42,7 +42,7 @@ public class SecurityConfig {
         return http.cors(withDefaults())
                 .csrf((csrf) -> csrf.disable())
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/login/**", "/token/refresh").permitAll()
+                        .requestMatchers("/auth/login/**", "/auth/token/refresh").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Swagger 관련 경로
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/user/**").hasAuthority(UserRole.USER.getRole())

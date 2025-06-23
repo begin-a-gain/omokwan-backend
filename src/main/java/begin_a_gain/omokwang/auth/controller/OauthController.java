@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Oauth", description = "Auth 관련 API")
+@Tag(name = "Auth", description = "Auth 관련 API")
 @RestController
 @RequiredArgsConstructor
 public class OauthController {
