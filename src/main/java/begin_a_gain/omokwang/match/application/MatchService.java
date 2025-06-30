@@ -12,7 +12,6 @@ import begin_a_gain.omokwang.match.domain.DayType;
 import begin_a_gain.omokwang.match.domain.MatchBoardResponse;
 import begin_a_gain.omokwang.match.domain.MatchDay;
 import begin_a_gain.omokwang.match.domain.MatchInfo;
-import begin_a_gain.omokwang.match.domain.MatchProgress;
 import begin_a_gain.omokwang.match.domain.MatchStatus;
 import begin_a_gain.omokwang.match.dto.CreateMatchRequest;
 import begin_a_gain.omokwang.match.dto.CreateMatchResponse;
@@ -23,7 +22,6 @@ import begin_a_gain.omokwang.match.dto.match_board.DateStatus;
 import begin_a_gain.omokwang.match.dto.match_board.UserInfo;
 import begin_a_gain.omokwang.match.dto.match_board.UserStatus;
 import begin_a_gain.omokwang.match.repository.MatchDayRepository;
-import begin_a_gain.omokwang.match.repository.MatchProgressRepository;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
@@ -52,7 +50,6 @@ public class MatchService {
     private final UserRepository userRepository;
     private final MatchDayRepository matchDayRepository;
     private final MatchStatusRepository matchStatusRepository;
-    private final MatchProgressRepository matchProgressRepository;
     private final MatchParticipantRepository matchParticipantRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -71,7 +68,6 @@ public class MatchService {
 
         var savedMatch = repository.save(match);
         saveMatchDays(match, request.getDayType());
-        saveMatchParticipantProgress(user, match);
         saveMatchParticipant(match, user);
         return CreateMatchResponse.builder().matchId(savedMatch.getId()).build();
     }
@@ -86,15 +82,6 @@ public class MatchService {
                 .match(match)
                 .user(user)
                 .build();
-    }
-
-    private void saveMatchParticipantProgress(User user, MatchInfo match) {
-        var matchProgressRequest = MatchProgress.builder()
-                .user(user)
-                .match(match)
-                .startDate(LocalDate.now(ZoneId.of("Asia/Seoul")))
-                .build();
-        matchProgressRepository.save(matchProgressRequest);
     }
 
     private MatchInfo mapToMatch(CreateMatchRequest request, User user) {
@@ -271,7 +258,7 @@ public class MatchService {
     }
 
     private List<UserInfo> getUserInfo(Long matchId) {
-        var users = matchProgressRepository.findUsersByMatchId(matchId);
+        var users = matchParticipantRepository.findUsersByMatchId(matchId);
 
         return users.stream()
                 .map(user -> new UserInfo(user.getId(), user.getNickname()))

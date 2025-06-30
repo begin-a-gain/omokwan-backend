@@ -39,6 +39,8 @@ public class MatchParticipant {
 
     private LocalDate joinDate;
 
+    private LocalDate leaveDate;
+
     @PrePersist
     public void prePersist() {
         this.joinDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
