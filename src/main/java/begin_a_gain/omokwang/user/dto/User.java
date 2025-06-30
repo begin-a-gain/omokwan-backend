@@ -36,4 +36,7 @@ public class User {
 
     @Column(name = "refresh_token")
     private String refreshToken;
+
+    @Column(name = "deleted")
+    private Boolean deleted;
 }
