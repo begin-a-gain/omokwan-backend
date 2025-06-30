@@ -9,9 +9,12 @@ import org.springframework.data.repository.query.Param;
 public interface MatchRepository extends JpaRepository<MatchInfo, Long> {
     boolean existsByMatchCode(String matchCode);
 
-    @Query("SELECT d FROM MatchInfo d " +
-            "JOIN MatchDay dd ON d.id = dd.match.id " +
-            "WHERE d.createId.id = :userId AND dd.dayOfWeek = :dayOfWeek")
+    @Query("""
+            SELECT m FROM MatchInfo m
+            JOIN MatchDay md ON m.id = md.match.id
+            JOIN MatchParticipant mp ON m.id = mp.match.id
+            WHERE mp.user.id = :userId AND md.dayOfWeek = :dayOfWeek
+            """)
     List<MatchInfo> findMatchByUserIdAndDayOfWeek(@Param("userId") Long userId,
                                                   @Param("dayOfWeek") int dayOfWeek);
 
