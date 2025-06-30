@@ -26,6 +26,8 @@ import begin_a_gain.omokwang.match.repository.MatchDayRepository;
 import begin_a_gain.omokwang.match.repository.MatchProgressRepository;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
+import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
+import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import java.time.LocalDate;
@@ -51,6 +53,7 @@ public class MatchService {
     private final MatchDayRepository matchDayRepository;
     private final MatchStatusRepository matchStatusRepository;
     private final MatchProgressRepository matchProgressRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
     private final PasswordEncoder passwordEncoder;
 
     private static final int MAX_ATTEMPTS = 50;
@@ -69,7 +72,20 @@ public class MatchService {
         var savedMatch = repository.save(match);
         saveMatchDays(match, request.getDayType());
         saveMatchParticipantProgress(user, match);
+        saveMatchParticipant(match, user);
         return CreateMatchResponse.builder().matchId(savedMatch.getId()).build();
+    }
+
+    private void saveMatchParticipant(MatchInfo match, User user) {
+        var matchParticipant = convertToMatchParticipant(match, user);
+        matchParticipantRepository.save(matchParticipant);
+    }
+
+    private MatchParticipant convertToMatchParticipant(MatchInfo match, User user) {
+        return MatchParticipant.builder()
+                .match(match)
+                .user(user)
+                .build();
     }
 
     private void saveMatchParticipantProgress(User user, MatchInfo match) {
@@ -133,7 +149,7 @@ public class MatchService {
         return sb.toString();
     }
 
-    public List<MatchByDayResponse> findMatchByday(LocalDate date) {
+    public List<MatchByDayResponse> findMatchByDay(LocalDate date) {
         var dayOfWeek = date.getDayOfWeek().getValue();
         var socialId = SecurityUtil.getCurrentUserSocialId();
         var userId = userRepository.findBySocialId(socialId).map(User::getId).orElse(null);

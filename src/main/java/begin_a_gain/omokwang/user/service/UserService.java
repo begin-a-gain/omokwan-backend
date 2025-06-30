@@ -1,5 +1,6 @@
 package begin_a_gain.omokwang.user.service;
 
+import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
 
     public void save(User user) {
         userRepository.save(user);
@@ -50,7 +52,11 @@ public class UserService {
     public void deleteUser(long socialId) {
         var user = userRepository.findBySocialId(socialId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+        matchParticipantRepository.deleteByUserId(user.getId());
+        updateUserInfo(user);
+    }
+
+    private void updateUserInfo(User user) {
         var maskedEmail = getMaskedEmail(user);
         user.setEmail(maskedEmail);
         user.setSocialId(null);

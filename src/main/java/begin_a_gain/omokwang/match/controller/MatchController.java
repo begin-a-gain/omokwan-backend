@@ -56,7 +56,7 @@ public class MatchController {
     public ResponseEntity<List<MatchByDayResponse>> findMatchByDay(
             @Parameter(description = "조회할 날짜 (YYYY-MM-DD 형식)", example = "2025-03-01")
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        var response = matchService.findMatchByday(date);
+        var response = matchService.findMatchByDay(date);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
