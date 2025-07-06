@@ -1,7 +1,7 @@
 package begin_a_gain.omokwang.auth.service;
 
-import begin_a_gain.omokwang.exception.CustomException;
-import begin_a_gain.omokwang.exception.ErrorCode;
+import begin_a_gain.omokwang.common.exception.CustomException;
+import begin_a_gain.omokwang.common.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;

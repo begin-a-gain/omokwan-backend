@@ -1,4 +1,4 @@
-package begin_a_gain.omokwang.exception;
+package begin_a_gain.omokwang.common.exception;
 
 import org.springframework.http.HttpStatus;
 

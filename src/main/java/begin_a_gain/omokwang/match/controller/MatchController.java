@@ -1,5 +1,6 @@
 package begin_a_gain.omokwang.match.controller;
 
+import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.match.application.MatchService;
 import begin_a_gain.omokwang.match.domain.Category;
 import begin_a_gain.omokwang.match.domain.MatchBoardResponse;
@@ -19,7 +20,6 @@ import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,9 +42,9 @@ public class MatchController {
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
     @PostMapping("/matches")
-    public ResponseEntity<CreateMatchResponse> createMatch(@RequestBody CreateMatchRequest request) {
+    public ResponseEntity<CommonResponse<CreateMatchResponse>> createMatch(@RequestBody CreateMatchRequest request) {
         var response = matchService.createMatch(request);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 
     @Operation(summary = "내 대국 찾기", description = "날짜별 내 대국 조회")
@@ -53,11 +53,11 @@ public class MatchController {
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
     @GetMapping("/matches")
-    public ResponseEntity<List<MatchByDayResponse>> findMatchByDay(
+    public ResponseEntity<CommonResponse<List<MatchByDayResponse>>> findMatchByDay(
             @Parameter(description = "조회할 날짜 (YYYY-MM-DD 형식)", example = "2025-03-01")
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         var response = matchService.findMatchByDay(date);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 
     @Operation(summary = "대국 카테고리", description = "대국 카테고리 목록")
@@ -66,9 +66,9 @@ public class MatchController {
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
     @GetMapping("/matches/categories")
-    public ResponseEntity<List<Category>> getMatchCategories() {
+    public ResponseEntity<CommonResponse<List<Category>>> getMatchCategories() {
         var response = matchService.getMatchCategories();
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 
     @Operation(summary = "대국 완료", description = "대국 상태를 완료 or 취소")
@@ -77,7 +77,7 @@ public class MatchController {
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
     @PutMapping("/matches/{matchId}/status")
-    public ResponseEntity<MatchStatusResponse> matchStatus(
+    public ResponseEntity<CommonResponse<MatchStatusResponse>> matchStatus(
             @PathVariable("matchId")
             @Schema(example = "1")
             Long matchId,
@@ -85,7 +85,7 @@ public class MatchController {
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         var response = matchService.matchStatus(date, matchId);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 
     @Operation(summary = "대국 메인 보드", description = "대국 메인 보드")
@@ -94,7 +94,7 @@ public class MatchController {
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
     })
     @GetMapping("/matches/{matchId}/board")
-    public ResponseEntity<MatchBoardResponse> getMatchBoard(
+    public ResponseEntity<CommonResponse<MatchBoardResponse>> getMatchBoard(
             @PathVariable("matchId") @Schema(example = "1") Long matchId,
             @Parameter(description = "(YYYY-MM-DD)", example = "2025-12-01")
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -103,7 +103,7 @@ public class MatchController {
     ) {
         var request = convertToRequest(matchId, from, size);
         var response = matchService.getBoardForMatch(request);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 
     private static MatchBoardRequest convertToRequest(Long matchId, LocalDate date, int size) {

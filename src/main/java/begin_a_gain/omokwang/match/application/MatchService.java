@@ -4,8 +4,8 @@ import static begin_a_gain.omokwang.match.domain.CompletionStatus.COMPLETED;
 import static begin_a_gain.omokwang.match.domain.CompletionStatus.NOT_COMPLETED;
 
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
-import begin_a_gain.omokwang.exception.CustomException;
-import begin_a_gain.omokwang.exception.ErrorCode;
+import begin_a_gain.omokwang.common.exception.CustomException;
+import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.match.domain.Category;
 import begin_a_gain.omokwang.match.domain.CategoryType;
 import begin_a_gain.omokwang.match.domain.DayType;

@@ -5,8 +5,9 @@ import begin_a_gain.omokwang.auth.dto.OauthRequestDto;
 import begin_a_gain.omokwang.auth.dto.OauthResponseDto;
 import begin_a_gain.omokwang.auth.dto.RefreshTokenResponseDto;
 import begin_a_gain.omokwang.auth.service.OauthService;
-import begin_a_gain.omokwang.exception.CustomException;
-import begin_a_gain.omokwang.exception.ErrorCode;
+import begin_a_gain.omokwang.common.exception.CustomException;
+import begin_a_gain.omokwang.common.exception.ErrorCode;
+import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +21,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,9 +42,10 @@ public class OauthController {
                     content = {@Content(schema = @Schema(implementation = OauthResponseDto.class))}),
     })
     @PostMapping("/auth/login/{provider}")
-    public OauthResponseDto login(@PathVariable("provider") @Schema(example = "kakao, apple") String provider,
-                                  @RequestBody OauthRequestDto oauthRequestDto,
-                                  HttpServletResponse response) {
+    public ResponseEntity<CommonResponse<OauthResponseDto>> login(
+            @PathVariable("provider") @Schema(example = "kakao, apple") String provider,
+            @RequestBody OauthRequestDto oauthRequestDto,
+            HttpServletResponse response) {
 
         if (!provider.equals("kakao") && !provider.equals("apple")) {
             throw new CustomException(ErrorCode.BAD_REQUEST);
@@ -55,7 +59,9 @@ public class OauthController {
                 boolean signUpComplete = userService.isSignUpComplete(oauthInfo.getSocialId());
                 oauthResponseDto = new OauthResponseDto(oauthInfo.getAccessToken(), signUpComplete);
         }
-        return oauthResponseDto;
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(CommonResponse.success(200, "로그인 성공", oauthResponseDto));
     }
 
     // 리프레시 토큰으로 액세스토큰 재발급 받는 로직
@@ -65,8 +71,8 @@ public class OauthController {
             @ApiResponse(responseCode = "401", description = "유효하지않은 리프레시 토큰입니다.", content = @Content)
     })
     @PostMapping("/auth/token/refresh")
-    public RefreshTokenResponseDto tokenRefresh(HttpServletRequest request) {
-        RefreshTokenResponseDto refreshTokenResponseDto = new RefreshTokenResponseDto();
+    public ResponseEntity<CommonResponse<RefreshTokenResponseDto>> tokenRefresh(HttpServletRequest request) {
+        RefreshTokenResponseDto response = new RefreshTokenResponseDto();
         Cookie[] list = request.getCookies();
         if (list == null) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
@@ -79,7 +85,7 @@ public class OauthController {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
         String accessToken = oauthService.refreshAccessToken(refreshTokenCookie.getValue());
-        refreshTokenResponseDto.setAccessToken(accessToken);
-        return refreshTokenResponseDto;
+        response.setAccessToken(accessToken);
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 }

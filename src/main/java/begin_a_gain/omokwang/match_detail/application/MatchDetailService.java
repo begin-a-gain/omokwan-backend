@@ -1,8 +1,8 @@
 package begin_a_gain.omokwang.match_detail.application;
 
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
-import begin_a_gain.omokwang.exception.CustomException;
-import begin_a_gain.omokwang.exception.ErrorCode;
+import begin_a_gain.omokwang.common.exception.CustomException;
+import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.match.domain.MatchInfo;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
