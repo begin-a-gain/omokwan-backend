@@ -1,10 +1,10 @@
 package begin_a_gain.omokwang.match_detail.controller;
 
+import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.match_detail.application.MatchDetailService;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,11 +26,11 @@ public class MatchDetailController {
 
     @Operation(summary = "대국 참여", description = "대국 참여.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "성공", content = @Content),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content)
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "Bad Request")
     })
     @PostMapping("/matches/{matchId}/participants")
-    public ResponseEntity<JoinMatchResponse> joinMatch(
+    public ResponseEntity<CommonResponse<JoinMatchResponse>> joinMatch(
             @PathVariable("matchId") Long matchId,
             @Nullable @RequestBody JoinMatchRequest request) {
         matchDetailService.joinMatch(matchId, request);

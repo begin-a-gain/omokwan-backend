@@ -21,7 +21,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,8 +37,8 @@ public class OauthController {
 
     @Operation(summary = "Oauth 로그인", description = "Oauth 로그인을 진행한다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "성공",
-                    content = {@Content(schema = @Schema(implementation = OauthResponseDto.class))}),
+            @ApiResponse(responseCode = "200", description = "성공")
+
     })
     @PostMapping("/auth/login/{provider}")
     public ResponseEntity<CommonResponse<OauthResponseDto>> login(
@@ -59,9 +58,7 @@ public class OauthController {
                 boolean signUpComplete = userService.isSignUpComplete(oauthInfo.getSocialId());
                 oauthResponseDto = new OauthResponseDto(oauthInfo.getAccessToken(), signUpComplete);
         }
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(CommonResponse.success(200, "로그인 성공", oauthResponseDto));
+        return ResponseEntity.ok(CommonResponse.success(oauthResponseDto));
     }
 
     // 리프레시 토큰으로 액세스토큰 재발급 받는 로직
