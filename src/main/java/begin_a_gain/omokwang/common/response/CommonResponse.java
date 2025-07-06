@@ -16,7 +16,7 @@ public record CommonResponse<T>(
         String message,
 
         @Schema(description = "실제 데이터")
-        T datadeleteUser
+        T data
 ) {
     public static <T> CommonResponse<T> success(T data) {
         return new CommonResponse<>(200, "success", "요청 성공", data);
