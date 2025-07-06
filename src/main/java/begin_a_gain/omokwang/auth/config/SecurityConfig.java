@@ -5,7 +5,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import begin_a_gain.omokwang.auth.enums.UserRole;
 import begin_a_gain.omokwang.auth.filter.JwtFilter;
 import begin_a_gain.omokwang.auth.service.JwtTokenService;
-import begin_a_gain.omokwang.exception.ExceptionHandlerFilter;
+import begin_a_gain.omokwang.common.exception.ExceptionHandlerFilter;
 import begin_a_gain.omokwang.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

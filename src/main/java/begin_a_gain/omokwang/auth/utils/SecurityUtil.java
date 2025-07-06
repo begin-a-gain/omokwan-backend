@@ -1,8 +1,8 @@
 package begin_a_gain.omokwang.auth.utils;
 
 import begin_a_gain.omokwang.auth.models.UserPrincipal;
-import begin_a_gain.omokwang.exception.CustomException;
-import begin_a_gain.omokwang.exception.ErrorCode;
+import begin_a_gain.omokwang.common.exception.CustomException;
+import begin_a_gain.omokwang.common.exception.ErrorCode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 

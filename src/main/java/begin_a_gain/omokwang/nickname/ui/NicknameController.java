@@ -1,6 +1,7 @@
 package begin_a_gain.omokwang.nickname.ui;
 
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
+import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.nickname.application.NicknameService;
 import begin_a_gain.omokwang.nickname.domain.NicknameUpdateDto;
 import begin_a_gain.omokwang.nickname.dto.NicknameRequest;
@@ -32,13 +33,13 @@ public class NicknameController {
             @ApiResponse(responseCode = "200", description = "Nickname updated successfully")
     })
     @PutMapping("/nicknames")
-    public ResponseEntity<String> updateNickname(@RequestBody NicknameRequest nicknameRequest) {
+    public ResponseEntity<CommonResponse<String>> updateNickname(@RequestBody NicknameRequest nicknameRequest) {
         final long userId = SecurityUtil.getCurrentUserSocialId();
         String nickname = nicknameRequest.getNickname();
         NicknameUpdateDto nicknameUpdateParam = new NicknameUpdateDto(userId, nickname);
 
         nicknameService.updateNickname(nicknameUpdateParam);
-        return ResponseEntity.ok("Nickname updated.");
+        return ResponseEntity.ok(CommonResponse.success());
 
     }
 
@@ -49,10 +50,14 @@ public class NicknameController {
             @ApiResponse(responseCode = "400", description = "Invalid nickname or nickname already taken", content = @Content)
     })
     @PostMapping("/nicknames/validations")
-    public ResponseEntity<String> checkNickname(@RequestBody NicknameRequest nicknameRequest) {
+    public ResponseEntity<CommonResponse<Object>> checkNickname(@RequestBody NicknameRequest nicknameRequest) {
         Optional<String> validationError = nicknameService.validateNickname(nicknameRequest.getNickname());
 
-        return validationError.map(x -> ResponseEntity.badRequest().body(x))
-                .orElseGet(() -> ResponseEntity.ok("Nickname is valid and available."));
+        return validationError
+                .map(errorMessage -> ResponseEntity
+                        .badRequest()
+                        .body(CommonResponse.error(400, errorMessage)))
+                .orElseGet(() -> ResponseEntity
+                        .ok(CommonResponse.success()));
     }
 }

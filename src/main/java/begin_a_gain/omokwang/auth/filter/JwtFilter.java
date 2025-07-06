@@ -2,8 +2,8 @@ package begin_a_gain.omokwang.auth.filter;
 
 import begin_a_gain.omokwang.auth.models.UserPrincipal;
 import begin_a_gain.omokwang.auth.service.JwtTokenService;
-import begin_a_gain.omokwang.exception.CustomException;
-import begin_a_gain.omokwang.exception.ErrorCode;
+import begin_a_gain.omokwang.common.exception.CustomException;
+import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.service.UserService;
 import jakarta.servlet.FilterChain;
