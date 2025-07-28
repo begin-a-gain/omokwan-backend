@@ -89,7 +89,7 @@ public class MatchService {
             throw new IllegalArgumentException("Invalid category code: " + request.getCategoryCode());
         }
 
-        String encodedPassword = request.isPublic() ? null : passwordEncoder.encode(request.getPassword());
+        String encodedPassword = request.getIsPublic() ? null : passwordEncoder.encode(request.getPassword());
 
         return MatchInfo.builder()
                 .createId(user)
@@ -97,7 +97,7 @@ public class MatchService {
                 .maxParticipants(request.getMaxParticipants())
                 .participants(DEFAULT_PARTICIPANT)
                 .category(request.getCategoryCode())
-                .isPublic(request.isPublic())
+                .isPublic(request.getIsPublic())
                 .password(encodedPassword)
                 .matchCode(generateMatchCode()).build();
     }
