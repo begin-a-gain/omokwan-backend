@@ -29,4 +29,8 @@ public class CreateMatchRequest {
     @Schema(description = "비밀번호", example = "1234")
     private String password;
 
+    @JsonProperty("isPublic")
+    public boolean getIsPublic() {
+        return isPublic;
+    }
 }
