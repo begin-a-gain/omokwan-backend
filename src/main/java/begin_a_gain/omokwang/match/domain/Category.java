@@ -13,4 +13,9 @@ public class Category {
 
     @Schema(description = "대국 카테고리", example = "운동")
     private String category;
+
+    @Schema(description = "대국 카테고리 이모티콘")
+    private String emoji;
+
+
 }
