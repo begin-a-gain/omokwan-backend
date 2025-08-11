@@ -5,12 +5,12 @@ import java.util.List;
 
 public enum CategoryType {
     EXERCISE("1", "운동", "U+1F4AA"),
-    HEALTH("2", "건강", "U+1F3C3"),
+    HEALTH("2", "건강", "U+1F3C3 U+200D U+2640 U+FE0F"),
     HOBBY("3", "취미", "U+1F308"),
-    LIFESTYLE("4", "생활", "U+26AA"),
+    LIFESTYLE("4", "생활", "U+1FAE7"),
     STUDY("5", "공부", "U+1F4DD"),
-    PRACTICE("6", "연습", "U+1F300"),
-    KNOWLEDGE("7", "시사/교양", "U+1F4F0"),
+    PRACTICE("6", "연습", "U+1F501"),
+    KNOWLEDGE("7", "시사/교양", "U+1F5DE"),
     INSTRUMENT("8", "악기", "U+1F3B5"),
     IMPROVEMENT("9", "자기계발", "U+1F4DA"),
     DIET("10", "다이어트", "U+1F957"),
