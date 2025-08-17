@@ -5,7 +5,7 @@ import java.util.List;
 
 public enum CategoryType {
     EXERCISE("1", "운동", "U+1F4AA"),
-    HEALTH("2", "건강", "U+1F3C3 U+200D U+2640 U+FE0F"),
+    HEALTH("2", "건강", "U+1F3C3"),
     HOBBY("3", "취미", "U+1F308"),
     LIFESTYLE("4", "생활", "U+1FAE7"),
     STUDY("5", "공부", "U+1F4DD"),
