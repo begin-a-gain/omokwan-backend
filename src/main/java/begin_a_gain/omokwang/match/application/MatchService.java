@@ -141,7 +141,7 @@ public class MatchService {
         var socialId = SecurityUtil.getCurrentUserSocialId();
         var userId = userRepository.findBySocialId(socialId).map(User::getId).orElse(null);
 
-        var matchList = repository.findMatchByUserIdAndDayOfWeek(userId, dayOfWeek);
+        var matchList = repository.findMatchByUserIdAndDayOfWeek(userId, dayOfWeek, date);
 
         return matchList.stream().map(x -> MatchByDayResponse.builder().matchId(x.getId()).name(x.getName())
                 .ongoingDays(calculateOngoingDays(x.getCreateDate())).participants(x.getParticipants())
