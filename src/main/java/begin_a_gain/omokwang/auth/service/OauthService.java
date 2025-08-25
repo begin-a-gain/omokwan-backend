@@ -1,11 +1,14 @@
 package begin_a_gain.omokwang.auth.service;
 
 import begin_a_gain.omokwang.auth.dto.OauthDto;
+import begin_a_gain.omokwang.auth.dto.RefreshTokenResponseDto;
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,25 +26,36 @@ public class OauthService {
     }
 
     public String getTokens(Long id, HttpServletResponse response) {
-        final String accessToken = jwtTokenService.createAccessToken(id.toString());
-        final String refreshToken = jwtTokenService.createRefreshToken();
+        String accessToken = jwtTokenService.createAccessToken(id.toString());
+        String refreshToken = jwtTokenService.createRefreshToken();
         userService.updateRefreshToken(id, refreshToken);
 
         jwtTokenService.addRefreshTokenToCookie(refreshToken, response);
         return accessToken;
     }
 
-    // 리프레시 토큰으로 액세스토큰 새로 갱신
-    public String refreshAccessToken(String refreshToken) {
-        User user = userService.findByRefreshToken(refreshToken);
-        if (user == null) {
-            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
-        }
+    @Transactional
+    public RefreshTokenResponseDto refreshToken(String refreshToken) {
+        User user = Optional.ofNullable(userService.findByRefreshToken(refreshToken))
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_REFRESH_TOKEN));
 
         if (!jwtTokenService.validateToken(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
+        var accessToken = getAccessToken(user);
+        var newRefreshToken = jwtTokenService.createRefreshToken();
+        userService.updateRefreshToken(user.getSocialId(), newRefreshToken);
+
+        return RefreshTokenResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(newRefreshToken)
+                .build();
+    }
+
+
+    private String getAccessToken(User user) {
         return jwtTokenService.createAccessToken(user.getSocialId().toString());
     }
+
 }

@@ -62,14 +62,13 @@ public class OauthController {
     }
 
     // 리프레시 토큰으로 액세스토큰 재발급 받는 로직
-    @Operation(summary = "Access Token 재발급", description = "리프레시 토큰으로 액세스 토큰을 재발급한다.")
+    @Operation(summary = "Access Token 재발급", description = "리프레시 토큰과 액세스 토큰을 재발급한다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @ApiResponse(responseCode = "200", description = "Token 재발급 성공"),
             @ApiResponse(responseCode = "401", description = "유효하지않은 리프레시 토큰입니다.", content = @Content)
     })
     @PostMapping("/auth/token/refresh")
     public ResponseEntity<CommonResponse<RefreshTokenResponseDto>> tokenRefresh(HttpServletRequest request) {
-        RefreshTokenResponseDto response = new RefreshTokenResponseDto();
         Cookie[] list = request.getCookies();
         if (list == null) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
@@ -81,8 +80,7 @@ public class OauthController {
         if (refreshTokenCookie == null) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
-        String accessToken = oauthService.refreshAccessToken(refreshTokenCookie.getValue());
-        response.setAccessToken(accessToken);
+        var response = oauthService.refreshToken(refreshTokenCookie.getValue());
         return ResponseEntity.ok(CommonResponse.success(response));
     }
 }
