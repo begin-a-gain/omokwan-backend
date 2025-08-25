@@ -39,4 +39,5 @@ public class User {
 
     @Column(name = "deleted")
     private Boolean deleted;
+
 }
