@@ -10,6 +10,7 @@ public enum ErrorCode {
     PASSWORD_MISMATCH("잘못된 비밀번호입니다.", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     DAEGUK_NOT_FOUND("대국을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    NOT_FOUND("Not Found.", HttpStatus.NOT_FOUND),
     NOT_EXIST_USER("존재하지 않는 유저입니다.", HttpStatus.UNAUTHORIZED);
 
     private final String message;
