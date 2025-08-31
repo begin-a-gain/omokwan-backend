@@ -12,13 +12,13 @@ import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -64,6 +64,7 @@ public class MatchDetailService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
     }
 
+    @Transactional(readOnly = true)
     public UserProfileResponse getUserProfileByMatchId(Long matchId, Long userId) {
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
