@@ -6,6 +6,7 @@ import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
 import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,8 +47,10 @@ public class MatchDetailController {
     })
     @GetMapping("/matches/{matchId}/users/{userId}")
     public ResponseEntity<CommonResponse<UserProfileResponse>> getUserProfileByMatchId(
-            @PathVariable("matchId") Long matchId,
-            @PathVariable("userId") Long userId) {
+            @Parameter(description = "Unique ID of the match", example = "100")
+            @PathVariable("matchId") long matchId,
+            @Parameter(description = "Unique ID of the user", example = "200")
+            @PathVariable("userId") long userId) {
         var response = matchDetailService.getUserProfileByMatchId(matchId, userId);
         return ResponseEntity.ok(CommonResponse.success(response));
     }
