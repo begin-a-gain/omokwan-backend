@@ -41,5 +41,14 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(CommonResponse.error(500, "error"));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<CommonResponse<Void>> illegalArgumentException(Exception ex) {
+        log.error("[Exception] errMsg: {}", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(CommonResponse.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
 }
 
