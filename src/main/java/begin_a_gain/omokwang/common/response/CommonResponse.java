@@ -2,6 +2,7 @@ package begin_a_gain.omokwang.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.http.HttpStatus;
 
 @Schema(description = "공통 응답 포맷")
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -19,19 +20,23 @@ public record CommonResponse<T>(
         T data
 ) {
     public static <T> CommonResponse<T> success(T data) {
-        return new CommonResponse<>(200, "success", "요청 성공", data);
+        return new CommonResponse<>(HttpStatus.OK.value(), HttpStatus.OK.name(), "요청 성공", data);
     }
 
     public static <T> CommonResponse<T> success() {
-        return new CommonResponse<>(200, "success", "요청 성공", null);
+        return new CommonResponse<>(HttpStatus.OK.value(), HttpStatus.OK.name(), "요청 성공", null);
     }
 
-    public static <T> CommonResponse<T> success(String message, T data) {
-        return new CommonResponse<>(200, "success", message, data);
+    public static <T> CommonResponse<T> success(int code, String message, T data) {
+        HttpStatus status = HttpStatus.resolve(code) != null ? HttpStatus.valueOf(code) : HttpStatus.OK;
+        return new CommonResponse<>(code, status.name(), message, data);
     }
 
+    // 에러 응답
     public static <T> CommonResponse<T> error(int code, String message) {
-        return new CommonResponse<>(code, "error", message, null);
+        HttpStatus status =
+                HttpStatus.resolve(code) != null ? HttpStatus.valueOf(code) : HttpStatus.INTERNAL_SERVER_ERROR;
+        return new CommonResponse<>(code, status.name(), message, null);
     }
 }
 

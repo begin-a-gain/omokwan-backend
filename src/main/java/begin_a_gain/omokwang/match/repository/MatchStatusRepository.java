@@ -31,4 +31,23 @@ public interface MatchStatusRepository extends JpaRepository<MatchStatus, Long> 
 
     List<MatchStatus> findByMatchIdAndMatchDateBetween(Long matchId, LocalDate startDate,
                                                        LocalDate endDate);
+
+    @Query("""
+            SELECT COUNT(ms)
+            FROM MatchStatus ms
+            WHERE ms.matchId = :matchId
+              AND ms.createId = :createId
+              AND MOD(ms.comboDays, 5) = 0
+            """)
+    int comboNumberByMatchIdAndUserId(@Param("matchId") Long matchId,
+                                      @Param("createId") Long createId);
+
+    @Query("""
+            SELECT COUNT(ms)
+            FROM MatchStatus ms
+            WHERE ms.matchId = :matchId
+              AND ms.createId = :createId
+            """)
+    int participantNumberByMatchIdAndUserId(@Param("matchId") Long matchId,
+                                            @Param("createId") Long createId);
 }
