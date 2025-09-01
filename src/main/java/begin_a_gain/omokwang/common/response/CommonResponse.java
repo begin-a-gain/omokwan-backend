@@ -35,7 +35,7 @@ public record CommonResponse<T>(
     public static <T> CommonResponse<T> error(int code, String message) {
         HttpStatus status =
                 HttpStatus.resolve(code) != null ? HttpStatus.valueOf(code) : HttpStatus.INTERNAL_SERVER_ERROR;
-        return new CommonResponse<>(code, status.name(), message, null);
+        return new CommonResponse<>(code, status.name().toLowerCase(), message, null);
     }
 }
 
