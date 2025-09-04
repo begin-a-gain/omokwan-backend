@@ -253,7 +253,8 @@ public class MatchService {
         return MatchBoardResponse.builder()
                 .users(getUserInfo(request.getMatchId()))
                 .dates(getMatchDates(request))
-                .nextCursor(getNextCursor(request))
+                .previousDate(getPreviousDate(request))
+                .nextDate(getNextDate(request))
                 .build();
     }
 
@@ -302,9 +303,14 @@ public class MatchService {
                 endDate);
     }
 
-    private LocalDate getNextCursor(MatchBoardRequest request) {
+    private LocalDate getPreviousDate(MatchBoardRequest request) {
         var startDate = request.getDate();
         return startDate.minusDays(request.getPageSize());
+    }
+
+    private LocalDate getNextDate(MatchBoardRequest request) {
+        var startDate = request.getDate();
+        return startDate.plusDays(request.getPageSize());
     }
 
 }

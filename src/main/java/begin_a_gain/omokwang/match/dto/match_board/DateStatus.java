@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 public record DateStatus(
-        @Schema(description = "날짜 (yyyy-MM-dd)", example = "2025-06-15")
+        @Schema(description = "날짜 (yyyy-MM-dd)", example = "2025-09-01")
         String date,
 
         @ArraySchema(arraySchema = @Schema(description = "유저 상태 목록"))
