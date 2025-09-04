@@ -18,8 +18,10 @@ public record MatchBoardResponse(
         @ArraySchema(arraySchema = @Schema(description = "날짜별 유저 상태 리스트"))
         List<DateStatus> dates,
 
-        @Schema(description = "다음 요청을 위한 기준 날짜")
-        LocalDate nextCursor
+        @Schema(description = "과거 데이터 요청을 위한 날짜", example = "2025-09-01")
+        LocalDate previousDate,
 
+        @Schema(description = "미래 데이터 요청을 위한 기준 날짜", example = "2025-09-03")
+        LocalDate nextDate
 ) {
 }

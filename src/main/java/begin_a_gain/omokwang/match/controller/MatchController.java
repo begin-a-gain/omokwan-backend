@@ -95,9 +95,9 @@ public class MatchController {
     @GetMapping("/matches/{matchId}/board")
     public ResponseEntity<CommonResponse<MatchBoardResponse>> getMatchBoard(
             @PathVariable("matchId") @Schema(example = "1") Long matchId,
-            @Parameter(description = "(YYYY-MM-DD)", example = "2025-12-01")
+            @Parameter(description = "(YYYY-MM-DD)", example = "2025-09-01")
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @Parameter(description = "Page Size", example = "20")
+            @Parameter(description = "Page Size", example = "2")
             @RequestParam("size") int size
     ) {
         var request = convertToRequest(matchId, from, size);
