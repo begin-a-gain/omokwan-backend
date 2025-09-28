@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,14 +45,10 @@ public class NicknameController {
             @ApiResponse(responseCode = "400", description = "Invalid nickname or nickname already taken")
     })
     @PostMapping("/nicknames/validations")
-    public ResponseEntity<CommonResponse<Object>> checkNickname(@RequestBody NicknameRequest nicknameRequest) {
-        Optional<String> validationError = nicknameService.validateNickname(nicknameRequest.getNickname());
+    public ResponseEntity<CommonResponse<NicknameValidateResponse>> checkNickname(
+            @RequestBody NicknameRequest nicknameRequest) {
+        var response = nicknameService.validateNickname(nicknameRequest.getNickname());
 
-        return validationError
-                .map(errorMessage -> ResponseEntity
-                        .badRequest()
-                        .body(CommonResponse.error(400, errorMessage)))
-                .orElseGet(() -> ResponseEntity
-                        .ok(CommonResponse.success()));
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 }
