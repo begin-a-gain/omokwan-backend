@@ -37,7 +37,7 @@ public interface MatchStatusRepository extends JpaRepository<MatchStatus, Long> 
             FROM MatchStatus ms
             WHERE ms.matchId = :matchId
               AND ms.createId = :createId
-              AND MOD(ms.comboDays, 5) = 0
+              AND MOD(ms.streakCount, 5) = 0
             """)
     int comboNumberByMatchIdAndUserId(@Param("matchId") Long matchId,
                                       @Param("createId") Long createId);

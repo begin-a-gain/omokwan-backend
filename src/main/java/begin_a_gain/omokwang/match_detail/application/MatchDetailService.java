@@ -55,6 +55,7 @@ public class MatchDetailService {
         return MatchParticipant.builder()
                 .match(match)
                 .user(participant)
+                .joinOrder(getJoinOrder(match.getId()))
                 .build();
     }
 
@@ -62,6 +63,10 @@ public class MatchDetailService {
         var socialId = SecurityUtil.getCurrentUserSocialId();
         return userRepository.findBySocialId(socialId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
+    }
+
+    private int getJoinOrder(Long matchId) {
+        return matchParticipantRepository.findMaxJoinOrderByMatchId(matchId) + 1;
     }
 
     @Transactional(readOnly = true)

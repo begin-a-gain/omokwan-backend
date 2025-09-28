@@ -19,9 +19,15 @@ public record MatchBoardResponse(
         List<DateStatus> dates,
 
         @Schema(description = "과거 데이터 요청을 위한 날짜", example = "2025-08-30")
-        LocalDate previousDate,
+        LocalDate prevCursor,
 
         @Schema(description = "미래 데이터 요청을 위한 기준 날짜", example = "2025-09-03")
-        LocalDate nextDate
+        LocalDate nextCursor,
+
+        @Schema(description = "과거 데이터 조회 가능 여부", example = "true")
+        boolean hasPrev,
+
+        @Schema(description = "미래 데이터 조회 가능 여부", example = "true")
+        boolean hasNext
 ) {
 }
