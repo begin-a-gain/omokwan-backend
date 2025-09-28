@@ -263,6 +263,7 @@ public class MatchService {
 
     public MatchBoardResponse getBoardForMatch(MatchBoardRequest request) {
         var userInfos = getUserInfo(request.getMatchId());
+        validateUserId(userInfos);
         validateSearchDate(request);
 
         var previousCursor = getPreviousCursor(request);
@@ -275,6 +276,16 @@ public class MatchService {
                 .hasPrev(checkPreviousCheck(previousCursor, request))
                 .hasNext(checkHasNext(nextCursor))
                 .build();
+    }
+
+    private void validateUserId(List<UserInfo> userInfos) {
+        Long currentUserId = getUserId();
+        boolean exists = userInfos.stream()
+                .anyMatch(joinUserIds -> joinUserIds.userId().equals(currentUserId));
+
+        if (!exists) {
+            throw new IllegalArgumentException("Current user is not part of this match");
+        }
     }
 
     private boolean checkPreviousCheck(LocalDate previousCursor, MatchBoardRequest request) {
