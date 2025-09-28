@@ -53,7 +53,7 @@ public class MatchController {
     })
     @GetMapping("/matches")
     public ResponseEntity<CommonResponse<List<MatchByDayResponse>>> findMatchByDay(
-            @Parameter(description = "조회할 날짜 (YYYY-MM-DD 형식)", example = "2025-03-01")
+            @Parameter(description = "조회할 날짜 (YYYY-MM-DD)", example = "2025-03-01")
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         var response = matchService.findMatchByDay(date);
         return ResponseEntity.ok(CommonResponse.success(response));

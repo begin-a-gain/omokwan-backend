@@ -3,6 +3,7 @@ package begin_a_gain.omokwang.match.dto.match_board;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
+
 @Builder
 public record UserInfo(
 
@@ -10,7 +11,9 @@ public record UserInfo(
         Long userId,
 
         @Schema(description = "유저 닉네임", example = "omok")
-        String nickname
+        String nickname,
 
+        @Schema(description = "뱡장 여부", example = "true")
+        boolean isHost
 ) {
 }

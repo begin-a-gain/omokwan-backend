@@ -37,6 +37,8 @@ public class MatchParticipant {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
+    private int joinOrder;
+
     private LocalDate joinDate;
 
     private LocalDate leaveDate;

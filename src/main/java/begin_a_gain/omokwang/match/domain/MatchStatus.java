@@ -48,8 +48,8 @@ public class MatchStatus {
     @Column(name = "is_combo")
     private boolean isCombo;
 
-    @Column(name = "combo_days")
-    private int comboDays;
+    @Column(name = "streak_count")
+    private int streakCount;
 
     public void updateCompletion(boolean completed) {
         this.completed = completed;

@@ -1,8 +1,5 @@
 package begin_a_gain.omokwang.match.application;
 
-import static begin_a_gain.omokwang.match.domain.CompletionStatus.COMPLETED;
-import static begin_a_gain.omokwang.match.domain.CompletionStatus.NOT_COMPLETED;
-
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
@@ -31,11 +28,14 @@ import begin_a_gain.omokwang.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -46,7 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MatchService {
 
-    private final MatchRepository repository;
+    private final MatchRepository matchRepository;
     private final UserRepository userRepository;
     private final MatchDayRepository matchDayRepository;
     private final MatchStatusRepository matchStatusRepository;
@@ -54,9 +54,15 @@ public class MatchService {
     private final PasswordEncoder passwordEncoder;
 
     private static final int MAX_ATTEMPTS = 50;
-    private static final int DEFAULT_COMBO_DAYS = 1;
+    private static final int DEFAULT_STREAK_COUNT = 1;
     private static final int DEFAULT_PARTICIPANT = 1;
     private static final int COMBO_MIN_DAYS = 5;
+
+    private static final ZoneId ZONE_KST = ZoneId.of("Asia/Seoul");
+
+    private static LocalDate todayKST() {
+        return LocalDate.now(ZONE_KST);
+    }
 
     @Transactional
     public CreateMatchResponse createMatch(CreateMatchRequest request) {
@@ -66,7 +72,7 @@ public class MatchService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
         var match = mapToMatch(request, user);
 
-        var savedMatch = repository.save(match);
+        var savedMatch = matchRepository.save(match);
         saveMatchDays(match, request.getDayType());
         saveMatchParticipant(match, user);
         return CreateMatchResponse.builder().matchId(savedMatch.getId()).build();
@@ -121,7 +127,7 @@ public class MatchService {
             if (attempts >= MAX_ATTEMPTS) {
                 throw new IllegalStateException("고유 대국 코드 생성 실패");
             }
-        } while (repository.existsByMatchCode(matchCode));
+        } while (matchRepository.existsByMatchCode(matchCode));
         return matchCode;
     }
 
@@ -137,11 +143,11 @@ public class MatchService {
     }
 
     public List<MatchByDayResponse> findMatchByDay(LocalDate date) {
-        var dayOfWeek = date.getDayOfWeek().getValue();
+        var dayOfWeek = getDayValue(date);
         var socialId = SecurityUtil.getCurrentUserSocialId();
         var userId = userRepository.findBySocialId(socialId).map(User::getId).orElse(null);
 
-        var matchList = repository.findMatchByUserIdAndDayOfWeek(userId, dayOfWeek, date);
+        var matchList = matchRepository.findMatchByUserIdAndDayOfWeek(userId, dayOfWeek, date);
 
         return matchList.stream().map(x -> MatchByDayResponse.builder().matchId(x.getId()).name(x.getName())
                 .ongoingDays(calculateOngoingDays(x.getCreateDate())).participants(x.getParticipants())
@@ -156,7 +162,7 @@ public class MatchService {
     }
 
     public int calculateOngoingDays(LocalDate createDate) {
-        return (int) ChronoUnit.DAYS.between(createDate, LocalDate.now(ZoneId.of("Asia/Seoul"))) + 1;
+        return (int) ChronoUnit.DAYS.between(createDate, todayKST()) + 1;
     }
 
     public List<Category> getMatchCategories() {
@@ -169,40 +175,47 @@ public class MatchService {
         if (isNotToday(matchDate)) {
             throw new CustomException(ErrorCode.BAD_REQUEST);
         }
+        validateScheduleDay(matchId);
         var userId = getUserId();
-
         Optional<MatchStatus> existingStatus = matchStatusRepository.findByMatchIdAndMatchDateAndCreateId(
                 matchId, matchDate, userId);
 
         if (isCompletedMatch(existingStatus)) {
-            var comboDays = existingStatus.map(MatchStatus::getComboDays).orElse(0);
+            var streakCount = existingStatus.map(MatchStatus::getStreakCount).orElse(0);
 
-            if (comboDays == COMBO_MIN_DAYS) {
+            if (streakCount == COMBO_MIN_DAYS) {
                 matchStatusRepository.resetRecentCombos(matchId, userId, false);
             }
             matchStatusRepository.deleteById(existingStatus.get().getId());
             return new MatchStatusResponse(false);
         }
 
-        var comboDays = getComboDays(matchId);
+        var streakCount = getStreakCount(matchId);
         MatchStatus newStatus = MatchStatus.builder()
                 .createId(getUserId())
                 .matchId(matchId)
                 .matchDate(matchDate)
                 .completed(true)
-                .isCombo(comboDays >= COMBO_MIN_DAYS)
-                .comboDays(comboDays)
+                .isCombo(streakCount >= COMBO_MIN_DAYS)
+                .streakCount(streakCount)
                 .build();
         matchStatusRepository.save(newStatus);
 
-        if (comboDays == COMBO_MIN_DAYS) {
+        if (streakCount == COMBO_MIN_DAYS) {
             matchStatusRepository.resetRecentCombos(matchId, userId, true);
         }
         return new MatchStatusResponse(newStatus.isCompleted());
     }
 
+    private void validateScheduleDay(Long matchId) {
+        var scheduleDays = getMatchDays(matchId);
+        if (!scheduleDays.contains(getDayValue(todayKST()))) {
+            throw new IllegalArgumentException("Today is not part of the schedule.");
+        }
+    }
+
     private boolean isNotToday(LocalDate matchDate) {
-        LocalDate todayKST = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        LocalDate todayKST = todayKST();
         return !todayKST.equals(matchDate);
     }
 
@@ -210,14 +223,13 @@ public class MatchService {
         return existingStatus.isPresent();
     }
 
-    private int getComboDays(Long matchId) {
+    private int getStreakCount(Long matchId) {
         var matchDays = getMatchDays(matchId);
         var recentMatchDate = getRecentMatchDate(matchDays);
-        System.out.println("test::" + recentMatchDate);
         var recentMatch = matchStatusRepository.findByMatchIdAndMatchDateAndCreateId(matchId,
                 recentMatchDate, getUserId());
 
-        return recentMatch.map(matchStatus -> matchStatus.getComboDays() + 1).orElse(DEFAULT_COMBO_DAYS);
+        return recentMatch.map(matchStatus -> matchStatus.getStreakCount() + 1).orElse(DEFAULT_STREAK_COUNT);
     }
 
     private List<Integer> getMatchDays(Long matchId) {
@@ -236,8 +248,8 @@ public class MatchService {
 
 
     public LocalDate getRecentMatchDate(List<Integer> matchDays) {
-        var today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        var todayValue = today.getDayOfWeek().getValue();
+        var today = todayKST();
+        var todayValue = getDayValue(today);
 
         var closestPast = matchDays.stream()
                 .filter(day -> day < todayValue)
@@ -250,52 +262,116 @@ public class MatchService {
     }
 
     public MatchBoardResponse getBoardForMatch(MatchBoardRequest request) {
+        var userInfos = getUserInfo(request.getMatchId());
+        validateSearchDate(request);
+
+        var previousCursor = getPreviousCursor(request);
+        var nextCursor = getNextCursor(request);
         return MatchBoardResponse.builder()
-                .users(getUserInfo(request.getMatchId()))
-                .dates(getMatchDates(request))
-                .previousDate(getPreviousDate(request))
-                .nextDate(getNextDate(request))
+                .users(userInfos)
+                .dates(getMatchDateInfos(request, userInfos))
+                .prevCursor(previousCursor)
+                .nextCursor(nextCursor)
+                .hasPrev(checkPreviousCheck(previousCursor, request))
+                .hasNext(checkHasNext(nextCursor))
                 .build();
+    }
+
+    private boolean checkPreviousCheck(LocalDate previousCursor, MatchBoardRequest request) {
+        var createDate = getCreateDate(request.getMatchId());
+        return !previousCursor.isBefore(createDate);
+    }
+
+    private boolean checkHasNext(LocalDate nextCursor) {
+        return !nextCursor.isAfter(todayKST());
     }
 
     private List<UserInfo> getUserInfo(Long matchId) {
         var users = matchParticipantRepository.findUsersByMatchId(matchId);
+        var hostId = users.get(0).getId();
+        var currentUserId = getUserId();
+
+        int currentUseridx = getCurrentUserIdx(users, currentUserId);
+
+        if (currentUseridx > 0) {
+            var current = users.remove(currentUseridx);
+            users.add(0, current);
+        }
 
         return users.stream()
-                .map(user -> new UserInfo(user.getId(), user.getNickname()))
+                .map(user -> new UserInfo(
+                        user.getId(),
+                        user.getNickname(),
+                        user.getId().equals(hostId)))
                 .toList();
     }
 
-    private List<DateStatus> getMatchDates(MatchBoardRequest request) {
+    private int getCurrentUserIdx(List<User> users, Long currentUserId) {
+        return IntStream.range(0, users.size())
+                .filter(i -> users.get(i).getId().equals(currentUserId))
+                .findFirst()
+                .orElse(-1);
+    }
+
+    private void validateSearchDate(MatchBoardRequest request) {
+
+        if (isAfterToday(request) || isBeforeCreateDate(request)) {
+            throw new IllegalArgumentException("Invalid date: " + request.getDate());
+        }
+    }
+
+    private boolean isAfterToday(MatchBoardRequest request) {
+        return request.getDate().isAfter(LocalDate.now(ZoneId.of("Asia/Seoul")));
+    }
+
+    private boolean isBeforeCreateDate(MatchBoardRequest request) {
+        return request.getDate().isBefore(getCreateDate(request.getMatchId()));
+    }
+
+    private List<DateStatus> getMatchDateInfos(MatchBoardRequest request, List<UserInfo> userInfos) {
+        var pageSize = request.getPageSize();
+        var baseDate = request.getDate();
+
+        var scheduleDays = getMatchDays(request.getMatchId());
+
+        var startDate = getStartDate(request.getMatchId(), pageSize, baseDate, scheduleDays);
+        var endDate = getEndDate(pageSize, baseDate, scheduleDays);
+
+        var scheduledDates = getAllScheduleDates(startDate, endDate, scheduleDays);
+        if (scheduledDates.isEmpty()) {
+            return List.of();
+        }
 
         var matchStatuses = getMatchStatuses(request);
+        var dateToStatuses = groupByDate(matchStatuses);
 
-        var dateToStatuses = matchStatuses.stream()
+        return getResults(scheduledDates, userInfos, dateToStatuses);
+    }
+
+    private Map<LocalDate, List<UserStatus>> groupByDate(List<MatchStatus> matchStatuses) {
+        return matchStatuses.stream()
                 .collect(Collectors.groupingBy(
                         MatchStatus::getMatchDate,
                         Collectors.mapping(status -> new UserStatus(
                                 status.getCreateId(),
-                                status.isCompleted() ? COMPLETED : NOT_COMPLETED,
-                                status.getComboDays(),
+                                status.isCompleted(),
+                                status.getStreakCount(),
                                 status.isCombo()
                         ), Collectors.toList())
                 ));
-
-        var endDate = request.getDate();
-        var pageSize = request.getPageSize();
-        return Stream.iterate(endDate, date -> date.minusDays(1))
-                .limit(pageSize)
-                .map(date -> new DateStatus(
-                        date.toString(),
-                        dateToStatuses.getOrDefault(date, List.of())
-                ))
-                .toList();
     }
 
     private List<MatchStatus> getMatchStatuses(MatchBoardRequest request) {
-        var endDate = request.getDate();
         var pageSize = request.getPageSize();
-        var startDate = endDate.minusDays(pageSize - 1L);
+        var baseDate = request.getDate();
+        var scheduleDays = getMatchDays(request.getMatchId());
+        var startDate = getStartDate(request.getMatchId(), pageSize, baseDate, scheduleDays);
+        var endDate = getEndDate(pageSize, baseDate, scheduleDays);
+
+        var scheduledDates = getAllScheduleDates(startDate, endDate, scheduleDays);
+        if (scheduledDates.isEmpty()) {
+            return List.of();
+        }
 
         return matchStatusRepository.findByMatchIdAndMatchDateBetween(
                 request.getMatchId(),
@@ -303,14 +379,118 @@ public class MatchService {
                 endDate);
     }
 
-    private LocalDate getPreviousDate(MatchBoardRequest request) {
-        var startDate = request.getDate();
-        return startDate.minusDays(request.getPageSize());
+
+    private List<LocalDate> getAllScheduleDates(LocalDate startDate, LocalDate endDate, List<Integer> scheduleDays) {
+        return Stream.iterate(startDate, d -> !d.isAfter(endDate),
+                        d -> d.plusDays(1))
+                .filter(d -> scheduleDays.contains(getDayValue(d)))
+                .toList();
     }
 
-    private LocalDate getNextDate(MatchBoardRequest request) {
-        var startDate = request.getDate();
-        return startDate.plusDays(request.getPageSize());
+    private LocalDate getStartDate(Long matchId, int pageSize, LocalDate date, List<Integer> scheduleDays) {
+        int count = 0;
+        while (count < pageSize) {
+            date = date.minusDays(1);
+            if (scheduleDays.contains(getDayValue(date))) {
+                count++;
+            }
+        }
+        return getMoreRecent(date, getCreateDate(matchId));
     }
+
+    private LocalDate getMoreRecent(LocalDate date, LocalDate createDate) {
+        return date.isAfter(createDate) ? date : createDate;
+    }
+
+    private LocalDate getCreateDate(Long matchId) {
+        var matchInfo = matchRepository.findById(matchId)
+                .orElseThrow();
+        return matchInfo.getCreateDate();
+    }
+
+    private static int getDayValue(LocalDate date) {
+        return date.getDayOfWeek().getValue();
+    }
+
+    private LocalDate getEndDate(int pageSize, LocalDate date, List<Integer> scheduleDays) {
+        int count = 0;
+        while (count < pageSize) {
+            date = date.plusDays(1);
+            if (scheduleDays.contains(getDayValue(date))) {
+                count++;
+            }
+        }
+        return date;
+    }
+
+    private LocalDate getPreviousCursor(MatchBoardRequest request) {
+        var scheduleDays = getMatchDays(request.getMatchId());
+        var pageSize = request.getPageSize();
+        var date = request.getDate();
+        int count = 0;
+        while (count < pageSize + 1) {
+            date = date.minusDays(1);
+            if (scheduleDays.contains(getDayValue(date))) {
+                count++;
+            }
+        }
+        return date;
+    }
+
+    private LocalDate getNextCursor(MatchBoardRequest request) {
+        int count = 0;
+        var date = request.getDate();
+        var scheduleDays = getMatchDays(request.getMatchId());
+        var pageSize = request.getPageSize();
+        while (count < pageSize + 1) {
+            date = date.plusDays(1);
+            if (scheduleDays.contains(getDayValue(date))) {
+                count++;
+            }
+        }
+        return date;
+    }
+
+    private List<DateStatus> getResults(List<LocalDate> scheduledDates,
+                                        List<UserInfo> userInfos,
+                                        Map<LocalDate, List<UserStatus>> dateToStatuses) {
+        return scheduledDates.stream()
+                .map(date -> {
+                    var existingByUserId = getExistingByUserId(dateToStatuses, date);
+
+                    List<UserStatus> merged;
+
+                    if (userInfos == null || userInfos.isEmpty()) {
+                        merged = existingByUserId.values().stream()
+                                .sorted(Comparator.comparing(UserStatus::userId))
+                                .toList();
+                    } else {
+                        merged = userInfos.stream()
+                                .map(userInfo -> existingByUserId.getOrDefault(
+                                        userInfo.userId(),
+                                        defaultStatus(userInfo.userId())
+                                ))
+                                .collect(Collectors.toList());
+                    }
+
+                    return new DateStatus(date.toString(), merged);
+                })
+                .toList();
+    }
+
+    private Map<Long, UserStatus> getExistingByUserId(Map<LocalDate, List<UserStatus>> dateToStatuses, LocalDate date) {
+        return dateToStatuses
+                .getOrDefault(date, List.of())
+                .stream()
+                .collect(Collectors.toMap(UserStatus::userId,
+                        status -> status,
+                        (existing, replacement) -> replacement
+                ));
+    }
+
+    private static UserStatus defaultStatus(long userId) {
+        return new UserStatus(userId, false, 0, false);
+    }
+
 
 }
