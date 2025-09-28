@@ -3,9 +3,9 @@ package begin_a_gain.omokwang.nickname.application;
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.nickname.domain.NicknameUpdateDto;
+import begin_a_gain.omokwang.nickname.ui.NicknameValidateResponse;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,16 +40,16 @@ public class NicknameService {
         userRepository.save(user);
     }
 
-    public Optional<String> validateNickname(String nickname) {
-        if (isInvalidNickname(nickname)) {
-            return Optional.of(INVALID_NICKNAME_MESSAGE);
-        }
-
+    public NicknameValidateResponse validateNickname(String nickname) {
         if (isNicknameTaken(nickname)) {
-            return Optional.of(NICKNAME_TAKEN_MESSAGE);
+            return NicknameValidateResponse.builder()
+                    .isDuplicated(true)
+                    .build();
         }
 
-        return Optional.empty(); // 닉네임이 유효하고 사용 가능함을 의미
+        return NicknameValidateResponse.builder()
+                .isDuplicated(false)
+                .build();
     }
 
 }
