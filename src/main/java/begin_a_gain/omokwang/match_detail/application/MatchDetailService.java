@@ -34,7 +34,7 @@ public class MatchDetailService {
     @Transactional
     public void joinMatch(Long matchId, JoinMatchRequest request) {
         var match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new CustomException(ErrorCode.DAEGUK_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
         checkMatchPassword(request, match);
         if (!hasJoinedMatch(matchId)) {
             checkMatchCapacityFull(matchId, match.getMaxParticipants());
@@ -114,7 +114,7 @@ public class MatchDetailService {
     private void checkMatchCapacityFull(Long matchId, int maxParticipants) {
         var currentParticipants = matchParticipantRepository.findUsersByMatchId(matchId).size();
         if (maxParticipants == currentParticipants) {
-            throw new CustomException(ErrorCode.DAEGUK_CAPACITY_FULL);
+            throw new CustomException(ErrorCode.MATCH_CAPACITY_FULL);
         }
 
     }
