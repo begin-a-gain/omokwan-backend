@@ -1,5 +1,6 @@
 package begin_a_gain.omokwang.match_detail.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,6 +21,8 @@ public class UserProfileResponse {
     @Schema(description = "참여일 수", example = "7")
     private long participantDays;
 
+    @JsonProperty("isHost")
     @Schema(description = "뱡장 여부", example = "true")
-    private boolean isHost;
+    private boolean host;
+
 }
