@@ -94,7 +94,7 @@ public class MatchDetailService {
                 .combo(matchStatusRepository.comboNumberByMatchIdAndUserId(matchId, userId))
                 .participantNumbers(matchStatusRepository.participantNumberByMatchIdAndUserId(matchId, userId))
                 .participantDays(getParticipantDays(matchId, userId))
-                .isHost(hostId.equals(userId))
+                .host(hostId.equals(userId))
                 .build();
     }
 
