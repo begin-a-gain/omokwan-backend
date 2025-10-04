@@ -3,26 +3,27 @@ package begin_a_gain.omokwang.common.exception;
 import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
-    UNAUTHORIZED("인증되지않은 요청입니다.", HttpStatus.UNAUTHORIZED),
-    INVALID_ACCESS_TOKEN("유효하지않은 액세스 토큰입니다.", HttpStatus.UNAUTHORIZED),
-    INVALID_REFRESH_TOKEN("유효하지않은 리프레시 토큰입니다.", HttpStatus.UNAUTHORIZED),
-    BAD_REQUEST("잘못된 요청입니다.", HttpStatus.BAD_REQUEST),
-    PASSWORD_MISMATCH("잘못된 비밀번호입니다.", HttpStatus.BAD_REQUEST),
-    USER_NOT_FOUND("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    DAEGUK_NOT_FOUND("대국을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    NOT_FOUND("Not Found.", HttpStatus.NOT_FOUND),
-    NOT_EXIST_USER("존재하지 않는 유저입니다.", HttpStatus.UNAUTHORIZED);
+    UNAUTHORIZED("E1001", HttpStatus.UNAUTHORIZED),
+    INVALID_ACCESS_TOKEN("E1002", HttpStatus.UNAUTHORIZED),
+    INVALID_REFRESH_TOKEN("E1003", HttpStatus.UNAUTHORIZED),
+    BAD_REQUEST("E1004", HttpStatus.BAD_REQUEST),
+    PASSWORD_MISMATCH("E1005", HttpStatus.BAD_REQUEST),
+    USER_NOT_FOUND("E1006", HttpStatus.NOT_FOUND),
+    DAEGUK_NOT_FOUND("E1007", HttpStatus.NOT_FOUND),
+    DAEGUK_CAPACITY_FULL("E1008", HttpStatus.CONFLICT),
+    NOT_FOUND("E1009", HttpStatus.NOT_FOUND),
+    NOT_EXIST_USER("E1010", HttpStatus.UNAUTHORIZED);
 
-    private final String message;
+    private final String code;
     private final HttpStatus httpStatus;
 
-    ErrorCode(String message, HttpStatus httpStatus) {
-        this.message = message;
+    ErrorCode(String code, HttpStatus httpStatus) {
+        this.code = code;
         this.httpStatus = httpStatus;
     }
 
-    public String getMessage() {
-        return message;
+    public String getCode() {
+        return code;
     }
 
     public HttpStatus getHttpStatus() {

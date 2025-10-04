@@ -15,9 +15,6 @@ public class FindMatchResponse {
     @Schema(description = "최대 참가자 수", example = "5", maximum = "5")
     private int maxParticipants;
 
-    @Schema(description = "참가자 수", example = "3", maximum = "5")
-    private int participants;
-
     @Schema(description = "대국 완료 여부", example = "true|false")
     private boolean completed;
 

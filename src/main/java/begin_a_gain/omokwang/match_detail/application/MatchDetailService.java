@@ -15,6 +15,7 @@ import begin_a_gain.omokwang.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,8 +36,11 @@ public class MatchDetailService {
         var match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.DAEGUK_NOT_FOUND));
         checkMatchPassword(request, match);
-        var matchParticipant = convertToMatchParticipant(match);
-        matchParticipantRepository.save(matchParticipant);
+        if (!hasJoinedMatch(matchId)) {
+            checkMatchCapacityFull(matchId, match.getMaxParticipants());
+            var matchParticipant = convertToMatchParticipant(match);
+            matchParticipantRepository.save(matchParticipant);
+        }
     }
 
     private void checkMatchPassword(JoinMatchRequest request, MatchInfo match) {
@@ -51,7 +55,7 @@ public class MatchDetailService {
     }
 
     private MatchParticipant convertToMatchParticipant(MatchInfo match) {
-        User participant = getParticipant();
+        User participant = getCurrentUser();
         return MatchParticipant.builder()
                 .match(match)
                 .user(participant)
@@ -59,7 +63,7 @@ public class MatchDetailService {
                 .build();
     }
 
-    private User getParticipant() {
+    private User getCurrentUser() {
         var socialId = SecurityUtil.getCurrentUserSocialId();
         return userRepository.findBySocialId(socialId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
@@ -69,17 +73,34 @@ public class MatchDetailService {
         return matchParticipantRepository.findMaxJoinOrderByMatchId(matchId) + 1;
     }
 
+    private boolean hasJoinedMatch(Long matchId) {
+        var matchUserIds = getMatchUserIds(matchId);
+        var currentUserId = getCurrentUser().getId();
+        return matchUserIds.contains(currentUserId);
+    }
+
+    private List<Long> getMatchUserIds(Long matchId) {
+        var users = matchParticipantRepository.findUsersByMatchId(matchId);
+        return users.stream().map(User::getId).toList();
+    }
+
     @Transactional(readOnly = true)
     public UserProfileResponse getUserProfileByMatchId(Long matchId, Long userId) {
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
-
+        var hostId = getHostId(matchId);
         return UserProfileResponse.builder()
                 .nickName(user.getNickname())
                 .combo(matchStatusRepository.comboNumberByMatchIdAndUserId(matchId, userId))
                 .participantNumbers(matchStatusRepository.participantNumberByMatchIdAndUserId(matchId, userId))
                 .participantDays(getParticipantDays(matchId, userId))
+                .isHost(hostId.equals(userId))
                 .build();
+    }
+
+    private Long getHostId(Long matchId) {
+        var users = matchParticipantRepository.findUsersByMatchId(matchId);
+        return users.get(0).getId();
     }
 
     private long getParticipantDays(Long matchId, Long userId) {
@@ -88,6 +109,14 @@ public class MatchDetailService {
         var joinDay = matchInfo.getJoinDate();
         var today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         return ChronoUnit.DAYS.between(joinDay, today) + 1;
+    }
+
+    private void checkMatchCapacityFull(Long matchId, int maxParticipants) {
+        var currentParticipants = matchParticipantRepository.findUsersByMatchId(matchId).size();
+        if (maxParticipants == currentParticipants) {
+            throw new CustomException(ErrorCode.DAEGUK_CAPACITY_FULL);
+        }
+
     }
 
 }

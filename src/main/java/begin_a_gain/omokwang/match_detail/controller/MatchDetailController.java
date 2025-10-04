@@ -43,7 +43,8 @@ public class MatchDetailController {
     @Operation(summary = "대국별 유저 프로필", description = "유저 프로필.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "Bad Request")
+            @ApiResponse(responseCode = "400", description = "Bad Request"),
+            @ApiResponse(responseCode = "409", description = "Conflict")
     })
     @GetMapping("/matches/{matchId}/users/{userId}")
     public ResponseEntity<CommonResponse<UserProfileResponse>> getUserProfileByMatchId(

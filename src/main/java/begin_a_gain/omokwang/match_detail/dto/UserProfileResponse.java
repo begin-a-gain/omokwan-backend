@@ -19,4 +19,7 @@ public class UserProfileResponse {
 
     @Schema(description = "참여일 수", example = "7")
     private long participantDays;
+
+    @Schema(description = "뱡장 여부", example = "true")
+    private boolean isHost;
 }

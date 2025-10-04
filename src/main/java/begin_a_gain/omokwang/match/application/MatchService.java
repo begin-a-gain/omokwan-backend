@@ -101,7 +101,6 @@ public class MatchService {
                 .createId(user)
                 .name(request.getName())
                 .maxParticipants(request.getMaxParticipants())
-                .participants(DEFAULT_PARTICIPANT)
                 .category(request.getCategoryCode())
                 .isPublic(request.getIsPublic())
                 .password(encodedPassword)
@@ -150,12 +149,13 @@ public class MatchService {
         var matchList = matchRepository.findMatchByUserIdAndDayOfWeek(userId, dayOfWeek, date);
 
         return matchList.stream().map(x -> MatchByDayResponse.builder().matchId(x.getId()).name(x.getName())
-                .ongoingDays(calculateOngoingDays(x.getCreateDate())).participants(x.getParticipants())
+                .ongoingDays(calculateOngoingDays(x.getCreateDate()))
                 .maxParticipants(x.getMaxParticipants()).isPublic(x.isPublic())
-                .completed(findMatchStatusByday(x.getId(), date, userId)).build()).toList();
+                .participants(matchParticipantRepository.findUsersByMatchId(x.getId()).size())
+                .completed(findMatchStatusByDay(x.getId(), date, userId)).build()).toList();
     }
 
-    public boolean findMatchStatusByday(Long matchId, LocalDate matchDate, Long userId) {
+    public boolean findMatchStatusByDay(Long matchId, LocalDate matchDate, Long userId) {
         Optional<MatchStatus> matchStatus = matchStatusRepository.findByMatchIdAndMatchDateAndCreateId(matchId,
                 matchDate, userId);
         return matchStatus.map(MatchStatus::isCompleted).orElse(false);
