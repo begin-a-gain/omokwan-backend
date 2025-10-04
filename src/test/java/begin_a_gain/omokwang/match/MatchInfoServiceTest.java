@@ -50,7 +50,6 @@ public class MatchInfoServiceTest {
                 .createId(savedUser)
                 .name("Test Match")
                 .maxParticipants(5)
-                .participants(1)
                 .category("exercise")
                 .isPublic(true)
                 .matchCode("1234")

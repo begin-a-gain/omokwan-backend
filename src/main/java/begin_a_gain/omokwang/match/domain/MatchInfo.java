@@ -40,8 +40,6 @@ public class MatchInfo {
     @Column(name = "max_participants")
     private int maxParticipants;
 
-    @Column(name = "participants")
-    private int participants;
 
     @Column(name = "category")
     private String category;
