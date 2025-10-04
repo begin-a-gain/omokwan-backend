@@ -8,6 +8,10 @@ import lombok.Builder;
 @Schema(description = "Validate Nickname")
 public class NicknameValidateResponse {
 
+    @Schema(description = "유효성 체크", example = "true")
+    @JsonProperty("isValid")
+    private boolean isValid;
+
     @Schema(description = "닉네임 중복 여부", example = "true")
     @JsonProperty("isDuplicated")
     private boolean isDuplicated;

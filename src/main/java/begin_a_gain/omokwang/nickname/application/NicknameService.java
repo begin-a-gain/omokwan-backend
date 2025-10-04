@@ -41,13 +41,22 @@ public class NicknameService {
     }
 
     public NicknameValidateResponse validateNickname(String nickname) {
+        if (isInvalidNickname(nickname)) {
+            return NicknameValidateResponse.builder()
+                    .isValid(false)
+                    .isDuplicated(false)
+                    .build();
+        }
+
         if (isNicknameTaken(nickname)) {
             return NicknameValidateResponse.builder()
+                    .isValid(true)
                     .isDuplicated(true)
                     .build();
         }
 
         return NicknameValidateResponse.builder()
+                .isValid(true)
                 .isDuplicated(false)
                 .build();
     }
