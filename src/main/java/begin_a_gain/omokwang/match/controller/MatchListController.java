@@ -1,11 +1,14 @@
 package begin_a_gain.omokwang.match.controller;
 
 import begin_a_gain.omokwang.common.response.CommonResponse;
+import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.match.application.MatchListService;
 import begin_a_gain.omokwang.match.dto.MatchAllRequest;
 import begin_a_gain.omokwang.match.dto.MatchAllResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,7 +30,10 @@ public class MatchListController {
     @Operation(summary = "전체 대국 조회", description = "전체 대국 조회")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "Bad Request")
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
     @GetMapping("/matches/all")
     public ResponseEntity<CommonResponse<List<MatchAllResponse>>> findAllMatch(

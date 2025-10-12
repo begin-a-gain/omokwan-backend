@@ -2,10 +2,13 @@ package begin_a_gain.omokwang.nickname.ui;
 
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
 import begin_a_gain.omokwang.common.response.CommonResponse;
+import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.nickname.application.NicknameService;
 import begin_a_gain.omokwang.nickname.domain.NicknameUpdateDto;
 import begin_a_gain.omokwang.nickname.dto.NicknameRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,7 +45,10 @@ public class NicknameController {
     @Operation(summary = "Check nickname availability", description = "Checks if the provided nickname is valid and available.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Nickname is valid and available"),
-            @ApiResponse(responseCode = "400", description = "Invalid nickname or nickname already taken")
+            @ApiResponse(responseCode = "400", description = "Invalid nickname or nickname already taken",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
     @PostMapping("/nicknames/validations")
     public ResponseEntity<CommonResponse<NicknameValidateResponse>> checkNickname(

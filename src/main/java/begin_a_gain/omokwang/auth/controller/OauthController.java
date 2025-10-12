@@ -8,6 +8,7 @@ import begin_a_gain.omokwang.auth.service.OauthService;
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.common.response.CommonResponse;
+import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -65,7 +66,10 @@ public class OauthController {
     @Operation(summary = "Access Token 재발급", description = "리프레시 토큰과 액세스 토큰을 재발급한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Token 재발급 성공"),
-            @ApiResponse(responseCode = "401", description = "유효하지않은 리프레시 토큰입니다.", content = @Content)
+            @ApiResponse(responseCode = "401", description = "유효하지않은 리프레시 토큰입니다.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
     @PostMapping("/auth/token/refresh")
     public ResponseEntity<CommonResponse<RefreshTokenResponseDto>> tokenRefresh(HttpServletRequest request) {

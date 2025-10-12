@@ -7,13 +7,13 @@ import org.springframework.http.HttpStatus;
 @Schema(description = "공통 응답 포맷")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record CommonResponse<T>(
-        @Schema(description = "HTTP 응답 코드", example = "200")
+        @Schema(description = "HTTP 응답 코드")
         int code,
 
-        @Schema(description = "응답 상태", example = "success")
+        @Schema(description = "응답 상태")
         String status,
 
-        @Schema(description = "메시지", example = "요청 성공")
+        @Schema(description = "메시지")
         String message,
 
         @Schema(description = "실제 데이터")
