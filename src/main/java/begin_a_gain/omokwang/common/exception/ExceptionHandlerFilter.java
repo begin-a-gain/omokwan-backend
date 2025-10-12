@@ -1,6 +1,6 @@
 package begin_a_gain.omokwang.common.exception;
 
-import begin_a_gain.omokwang.common.response.CommonResponse;
+import begin_a_gain.omokwang.common.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -36,7 +36,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
         response.setStatus(status.value());
         response.setContentType("application/json; charset=UTF-8");
 
-        CommonResponse<Void> errorResponse = CommonResponse.error(status.value(), message);
+        ErrorResponse errorResponse = ErrorResponse.of(status.value(), message);
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 }

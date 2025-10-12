@@ -1,6 +1,7 @@
 package begin_a_gain.omokwang.match.controller;
 
 import begin_a_gain.omokwang.common.response.CommonResponse;
+import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.match.application.MatchService;
 import begin_a_gain.omokwang.match.domain.Category;
 import begin_a_gain.omokwang.match.domain.MatchBoardResponse;
@@ -11,6 +12,7 @@ import begin_a_gain.omokwang.match.dto.MatchByDayResponse;
 import begin_a_gain.omokwang.match.dto.MatchStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -38,7 +40,10 @@ public class MatchController {
     @Operation(summary = "대국 생성", description = "대국을 생성한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "Bad Request")
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
     @PostMapping("/matches")
     public ResponseEntity<CommonResponse<CreateMatchResponse>> createMatch(@RequestBody CreateMatchRequest request) {
@@ -49,7 +54,10 @@ public class MatchController {
     @Operation(summary = "내 대국 찾기", description = "날짜별 내 대국 조회")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "Bad Request")
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
     @GetMapping("/matches")
     public ResponseEntity<CommonResponse<List<MatchByDayResponse>>> findMatchByDay(
@@ -62,7 +70,10 @@ public class MatchController {
     @Operation(summary = "대국 카테고리", description = "대국 카테고리 목록")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "Bad Request")
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
     @GetMapping("/matches/categories")
     public ResponseEntity<CommonResponse<List<Category>>> getMatchCategories() {
@@ -73,7 +84,10 @@ public class MatchController {
     @Operation(summary = "대국 완료", description = "대국 상태를 완료 or 취소")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "Bad Request")
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
     @PutMapping("/matches/{matchId}/status")
     public ResponseEntity<CommonResponse<MatchStatusResponse>> matchStatus(
@@ -90,7 +104,10 @@ public class MatchController {
     @Operation(summary = "대국 메인 보드", description = "대국 메인 보드")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "Bad Request")
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
     @GetMapping("/matches/{matchId}/board")
     public ResponseEntity<CommonResponse<MatchBoardResponse>> getMatchBoard(
