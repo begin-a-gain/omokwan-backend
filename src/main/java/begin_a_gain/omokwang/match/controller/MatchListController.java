@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,8 +38,8 @@ public class MatchListController {
     public ResponseEntity<CommonResponse<MatchAllControllerResponse>> findAllMatch(
             @Parameter(description = "Joinable", example = "true")
             @RequestParam(name = "joinable", required = false) Boolean joinable,
-            @Parameter(description = "Category Id", example = "1")
-            @RequestParam(name = "category", required = false) Long category,
+            @Parameter(description = "Category", example = "1")
+            @RequestParam(name = "category", required = false) List<Long> categories,
             @Parameter(
                     description = "Search keyword — filters by match name, match ID, or host name",
                     example = "exercise"
@@ -53,7 +54,7 @@ public class MatchListController {
     ) {
         var request = MatchAllRequest.builder()
                 .joinable(joinable)
-                .categoryId(category)
+                .categories(categories)
                 .search(search)
                 .pageNumber(pageNumber - 1)
                 .pageSize(pageSize)

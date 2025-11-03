@@ -42,7 +42,7 @@ public class MatchListRepository {
                       ON u.id = info.create_id
                     LEFT JOIN match_participant AS p
                       ON p.match_id = info.id
-                    WHERE (:category IS NULL OR info.category = :category)
+                     WHERE ( :categoriesEmpty = TRUE OR info.category IN (:categories) )
                       AND (
                            :search IS NULL
                         OR LOWER(info.name)      LIKE CONCAT('%', LOWER(:search), '%')
@@ -69,7 +69,10 @@ public class MatchListRepository {
 
         Map<String, Object> params = new HashMap<>();
         params.put("joinable", query.getJoinable());
-        params.put("category", query.getCategoryId());
+        List<Long> categories = query.getCategories();
+        boolean categoriesEmpty = (categories == null || categories.isEmpty());
+        params.put("categoriesEmpty", categoriesEmpty);
+        params.put("categories", categoriesEmpty ? List.of(-1L) : categories);
         params.put("search", (query.getSearch() == null || query.getSearch().isBlank()) ? null : query.getSearch());
         params.put("pageSize", query.getPageSize());
         params.put("offset", query.getPageNumber() * query.getPageSize());

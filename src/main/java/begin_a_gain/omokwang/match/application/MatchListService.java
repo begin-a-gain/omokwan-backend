@@ -35,7 +35,7 @@ public class MatchListService {
     private MatchQuery convertToQuery(MatchAllRequest request) {
         return MatchQuery.builder()
                 .joinable(request.getJoinable())
-                .categoryId(request.getCategoryId())
+                .categories(request.getCategories())
                 .search(request.getSearch())
                 .pageNumber(request.getPageNumber())
                 .pageSize(request.getPageSize())
