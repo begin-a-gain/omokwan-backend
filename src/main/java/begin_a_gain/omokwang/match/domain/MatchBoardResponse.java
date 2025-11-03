@@ -28,6 +28,8 @@ public record MatchBoardResponse(
         boolean hasPrev,
 
         @Schema(description = "미래 데이터 조회 가능 여부", example = "true")
-        boolean hasNext
+        boolean hasNext,
+        @Schema(description = "오늘 대국 완료 여부", example = "true")
+        boolean isTodayMatchCompleted
 ) {
 }
