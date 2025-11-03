@@ -4,7 +4,6 @@ import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.match.application.MatchListService;
 import begin_a_gain.omokwang.match.dto.MatchAllRequest;
-import begin_a_gain.omokwang.match.dto.MatchAllResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +34,7 @@ public class MatchListController {
             )
     })
     @GetMapping("/matches/all")
-    public ResponseEntity<CommonResponse<List<MatchAllResponse>>> findAllMatch(
+    public ResponseEntity<CommonResponse<MatchAllControllerResponse>> findAllMatch(
             @Parameter(description = "Joinable", example = "true")
             @RequestParam(name = "joinable", required = false) Boolean joinable,
             @Parameter(description = "Category Id", example = "1")

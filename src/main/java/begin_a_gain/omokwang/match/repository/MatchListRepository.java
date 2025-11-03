@@ -62,7 +62,8 @@ public class MatchListRepository {
                           ))
                     )
                     ORDER BY create_date DESC, info.id DESC
-                    LIMIT :pageSize OFFSET :offset
+                    LIMIT :limitPlusOne OFFSET :offset
+                
                 
                 """;
 
@@ -72,6 +73,7 @@ public class MatchListRepository {
         params.put("search", (query.getSearch() == null || query.getSearch().isBlank()) ? null : query.getSearch());
         params.put("pageSize", query.getPageSize());
         params.put("offset", query.getPageNumber() * query.getPageSize());
+        params.put("limitPlusOne", query.getPageSize() + 1);
         params.put("userId", query.getUserId());
 
         return jdbcTemplate.query(sql, params, (rs, rowNum) ->
