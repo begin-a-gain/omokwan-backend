@@ -275,6 +275,7 @@ public class MatchService {
                 .nextCursor(nextCursor)
                 .hasPrev(checkPreviousCheck(previousCursor, request))
                 .hasNext(checkHasNext(nextCursor))
+                .isTodayMatchCompleted(getMatchCompleted(request))
                 .build();
     }
 
@@ -295,6 +296,12 @@ public class MatchService {
 
     private boolean checkHasNext(LocalDate nextCursor) {
         return !nextCursor.isAfter(todayKST());
+    }
+
+    private boolean getMatchCompleted(MatchBoardRequest request) {
+        return matchStatusRepository.existsByMatchIdAndCreateIdAndCompletedDate(request.getMatchId(),
+                getUserId()
+                , LocalDate.now(ZoneId.of("Asia/Seoul")));
     }
 
     private List<UserInfo> getUserInfo(Long matchId) {

@@ -50,4 +50,6 @@ public interface MatchStatusRepository extends JpaRepository<MatchStatus, Long> 
             """)
     int participantNumberByMatchIdAndUserId(@Param("matchId") Long matchId,
                                             @Param("createId") Long createId);
+
+    boolean existsByMatchIdAndCreateIdAndCompletedDate(Long matchId, Long createId, LocalDate completedDate);
 }
