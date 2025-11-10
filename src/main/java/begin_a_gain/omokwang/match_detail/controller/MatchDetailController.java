@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,8 +41,8 @@ public class MatchDetailController {
     public ResponseEntity<CommonResponse<JoinMatchResponse>> joinMatch(
             @PathVariable("matchId") Long matchId,
             @Nullable @RequestBody JoinMatchRequest request) {
-        matchDetailService.joinMatch(matchId, request);
-        return ResponseEntity.status(HttpStatus.OK).body(null);
+        var response = matchDetailService.joinMatch(matchId, request);
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 
     @Operation(summary = "대국별 유저 프로필", description = "유저 프로필.")

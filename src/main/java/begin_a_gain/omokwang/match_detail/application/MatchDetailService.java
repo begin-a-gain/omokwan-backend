@@ -8,6 +8,7 @@ import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
+import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
 import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.user.dto.User;
@@ -32,7 +33,7 @@ public class MatchDetailService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public void joinMatch(Long matchId, JoinMatchRequest request) {
+    public JoinMatchResponse joinMatch(Long matchId, JoinMatchRequest request) {
         var match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
         checkMatchPassword(request, match);
@@ -41,6 +42,9 @@ public class MatchDetailService {
             var matchParticipant = convertToMatchParticipant(match);
             matchParticipantRepository.save(matchParticipant);
         }
+        return JoinMatchResponse.builder()
+                .matchId(matchId)
+                .build();
     }
 
     private void checkMatchPassword(JoinMatchRequest request, MatchInfo match) {
