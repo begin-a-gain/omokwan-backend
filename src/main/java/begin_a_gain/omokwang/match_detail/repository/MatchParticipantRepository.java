@@ -22,4 +22,6 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
 
     @Query("SELECT COALESCE(MAX(mp.joinOrder), 0) FROM MatchParticipant mp WHERE mp.match.id = :matchId")
     int findMaxJoinOrderByMatchId(@Param("matchId") Long matchId);
+
+    Optional<MatchParticipant> findByMatchIdAndIsHostTrue(Long matchId);
 }
