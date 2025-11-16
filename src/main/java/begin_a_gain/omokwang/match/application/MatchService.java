@@ -15,6 +15,8 @@ import begin_a_gain.omokwang.match.dto.CreateMatchResponse;
 import begin_a_gain.omokwang.match.dto.MatchBoardRequest;
 import begin_a_gain.omokwang.match.dto.MatchByDayResponse;
 import begin_a_gain.omokwang.match.dto.MatchStatusResponse;
+import begin_a_gain.omokwang.match.dto.UpdateHostRequest;
+import begin_a_gain.omokwang.match.dto.UpdateHostResponse;
 import begin_a_gain.omokwang.match.dto.match_board.DateStatus;
 import begin_a_gain.omokwang.match.dto.match_board.UserInfo;
 import begin_a_gain.omokwang.match.dto.match_board.UserStatus;
@@ -514,4 +516,22 @@ public class MatchService {
     }
 
 
+    @Transactional
+    public UpdateHostResponse updateHost(Long matchId, UpdateHostRequest request) {
+        if (!isHost(matchId)) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+        matchParticipantRepository.unsetHost(matchId);
+        matchParticipantRepository.setHost(matchId, request.getUserId());
+        return UpdateHostResponse.builder()
+                .hostId(request.getUserId())
+                .build();
+    }
+
+    private boolean isHost(Long matchId) {
+        var host = matchParticipantRepository.findByMatchIdAndIsHostTrue(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Host not found: " + matchId));
+        var hostId = host.getUser().getId();
+        return hostId.equals(getUserId());
+    }
 }

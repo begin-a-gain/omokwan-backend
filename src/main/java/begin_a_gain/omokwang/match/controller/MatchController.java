@@ -10,6 +10,8 @@ import begin_a_gain.omokwang.match.dto.CreateMatchResponse;
 import begin_a_gain.omokwang.match.dto.MatchBoardRequest;
 import begin_a_gain.omokwang.match.dto.MatchByDayResponse;
 import begin_a_gain.omokwang.match.dto.MatchStatusResponse;
+import begin_a_gain.omokwang.match.dto.UpdateHostRequest;
+import begin_a_gain.omokwang.match.dto.UpdateHostResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -48,6 +50,25 @@ public class MatchController {
     @PostMapping("/matches")
     public ResponseEntity<CommonResponse<CreateMatchResponse>> createMatch(@RequestBody CreateMatchRequest request) {
         var response = matchService.createMatch(request);
+        return ResponseEntity.ok(CommonResponse.success(response));
+    }
+
+    @Operation(summary = "대국장 변경", description = "대국장을 변경한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+
+    @PutMapping("/matches/{matchId}/host")
+    public ResponseEntity<CommonResponse<UpdateHostResponse>> updateHost(
+            @PathVariable("matchId")
+            @Schema(example = "1")
+            Long matchId,
+            @RequestBody UpdateHostRequest request) {
+        var response = matchService.updateHost(matchId, request);
         return ResponseEntity.ok(CommonResponse.success(response));
     }
 
