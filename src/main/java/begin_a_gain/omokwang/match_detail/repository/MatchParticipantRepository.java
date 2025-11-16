@@ -6,6 +6,7 @@ import begin_a_gain.omokwang.user.dto.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,4 +25,24 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
     int findMaxJoinOrderByMatchId(@Param("matchId") Long matchId);
 
     Optional<MatchParticipant> findByMatchIdAndIsHostTrue(Long matchId);
+
+    @Modifying
+    @Query("""
+                UPDATE MatchParticipant mp
+                   SET mp.isHost = false
+                 WHERE mp.match.id = :matchId
+                   AND mp.isHost = true
+            """)
+    int unsetHost(@Param("matchId") Long matchId);
+
+
+    @Modifying
+    @Query("""
+                UPDATE MatchParticipant mp
+                   SET mp.isHost = true
+                 WHERE mp.match.id = :matchId
+                   AND mp.user.id = :userId
+            """)
+    int setHost(@Param("matchId") Long matchId, @Param("userId") Long userId);
+
 }
