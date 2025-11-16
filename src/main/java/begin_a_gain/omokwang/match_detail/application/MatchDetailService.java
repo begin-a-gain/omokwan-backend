@@ -103,8 +103,9 @@ public class MatchDetailService {
     }
 
     private Long getHostId(Long matchId) {
-        var users = matchParticipantRepository.findUsersByMatchId(matchId);
-        return users.get(0).getId();
+        var user = matchParticipantRepository.findByMatchIdAndIsHostTrue(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Host not found: " + matchId));
+        return user.getUser().getId();
     }
 
     private long getParticipantDays(Long matchId, Long userId) {

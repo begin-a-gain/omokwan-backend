@@ -87,6 +87,7 @@ public class MatchService {
         return MatchParticipant.builder()
                 .match(match)
                 .user(user)
+                .isHost(true)
                 .build();
     }
 
@@ -306,7 +307,9 @@ public class MatchService {
 
     private List<UserInfo> getUserInfo(Long matchId) {
         var users = matchParticipantRepository.findUsersByMatchId(matchId);
-        var hostId = users.get(0).getId();
+        var hostUser = matchParticipantRepository.findByMatchIdAndIsHostTrue(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Host not found: " + matchId));
+        var hostId = hostUser.getUser().getId();
         var currentUserId = getUserId();
 
         int currentUseridx = getCurrentUserIdx(users, currentUserId);
