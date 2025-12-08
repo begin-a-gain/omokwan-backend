@@ -61,7 +61,7 @@ public class MatchDetailController {
         return ResponseEntity.ok(CommonResponse.success(response));
     }
 
-    @Operation(summary = "대국별 유저 프로필", description = "유저 프로필.")
+    @Operation(summary = "대국별 유저 프로필", description = "대국별 유저 프로필.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "400", description = "Bad Request",
