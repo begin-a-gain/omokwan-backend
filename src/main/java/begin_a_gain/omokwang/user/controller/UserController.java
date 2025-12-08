@@ -5,6 +5,7 @@ import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.common.response.ErrorResponse;
+import begin_a_gain.omokwang.user.dto.DeletionSurveyRequest;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,8 +17,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -65,5 +69,24 @@ public class UserController {
     public void deleteUser() {
         long socialId = SecurityUtil.getCurrentUserSocialId();
         userService.deleteUser(socialId);
+    }
+
+    @Operation(
+            summary = "Deletion survey",
+            description = "Deletion survey information."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PostMapping("/me/deletion-survey")
+    public ResponseEntity<CommonResponse<String>> deletionSurvey(
+            @Nullable @RequestBody DeletionSurveyRequest request
+    ) {
+        userService.deletionSurvey(request);
+        return ResponseEntity.ok(CommonResponse.success());
     }
 }
