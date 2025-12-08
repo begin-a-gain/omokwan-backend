@@ -5,6 +5,7 @@ import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.match_detail.application.MatchDetailService;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
+import begin_a_gain.omokwang.match_detail.dto.MatchParticipantsResponse;
 import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,6 +43,21 @@ public class MatchDetailController {
             @PathVariable("matchId") Long matchId,
             @Nullable @RequestBody JoinMatchRequest request) {
         var response = matchDetailService.joinMatch(matchId, request);
+        return ResponseEntity.ok(CommonResponse.success(response));
+    }
+
+    @Operation(summary = "대국 참여자 조회", description = "대국 참여자 조회.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/matches/{matchId}/participants")
+    public ResponseEntity<CommonResponse<MatchParticipantsResponse>> getParticipants(
+            @PathVariable("matchId") Long matchId) {
+        var response = matchDetailService.getParticipants(matchId);
         return ResponseEntity.ok(CommonResponse.success(response));
     }
 

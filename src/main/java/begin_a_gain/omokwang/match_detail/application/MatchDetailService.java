@@ -9,6 +9,8 @@ import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
+import begin_a_gain.omokwang.match_detail.dto.MatchParticipantsResponse;
+import begin_a_gain.omokwang.match_detail.dto.ParticipantInfo;
 import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.user.dto.User;
@@ -121,7 +123,23 @@ public class MatchDetailService {
         if (maxParticipants == currentParticipants) {
             throw new CustomException(ErrorCode.MATCH_CAPACITY_FULL);
         }
-
     }
 
+    @Transactional(readOnly = true)
+    public MatchParticipantsResponse getParticipants(Long matchId) {
+        var match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        var users = matchParticipantRepository.findUsersByMatchId(matchId);
+        var userInfo = users.stream()
+                .map(u -> ParticipantInfo.builder()
+                        .userId(u.getId())
+                        .nickname(u.getNickname())
+                        .combo(matchStatusRepository.comboNumberByMatchIdAndUserId(matchId, u.getId()))
+                        .participantDays(getParticipantDays(matchId, u.getId()))
+                        .build())
+                .toList();
+        return MatchParticipantsResponse.builder()
+                .userInfo(userInfo)
+                .build();
+    }
 }
