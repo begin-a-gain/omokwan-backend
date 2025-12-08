@@ -1,7 +1,11 @@
 package begin_a_gain.omokwang.user.service;
 
+import begin_a_gain.omokwang.auth.utils.SecurityUtil;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
+import begin_a_gain.omokwang.user.dto.DeletionSurvey;
+import begin_a_gain.omokwang.user.dto.DeletionSurveyRequest;
 import begin_a_gain.omokwang.user.dto.User;
+import begin_a_gain.omokwang.user.repository.DeletionSurveyRepository;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.Optional;
@@ -15,6 +19,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final MatchParticipantRepository matchParticipantRepository;
+    private final DeletionSurveyRepository deletionSurveyRepository;
 
     public void save(User user) {
         userRepository.save(user);
@@ -67,5 +72,19 @@ public class UserService {
 
         var email = user.getEmail();
         return "[DELETED]_" + UUID.randomUUID() + "_" + email;
+    }
+
+    @Transactional
+    public void deletionSurvey(DeletionSurveyRequest request) {
+        long socialId = SecurityUtil.getCurrentUserSocialId();
+        var user = userRepository.findBySocialId(socialId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        DeletionSurvey survey = DeletionSurvey.builder()
+                .userId(user.getId())
+                .reasons(request.reasons())
+                .otherReason(request.otherReason())
+                .build();
+
+        deletionSurveyRepository.save(survey);
     }
 }
