@@ -127,6 +127,7 @@ public class MatchDetailService {
 
     @Transactional(readOnly = true)
     public MatchParticipantsResponse getParticipants(Long matchId) {
+
         var users = matchParticipantRepository.findUsersByMatchId(matchId);
         var userInfo = users.stream()
                 .map(u -> ParticipantInfo.builder()
