@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +52,6 @@ public class MatchService {
     private final MatchDayRepository matchDayRepository;
     private final MatchStatusRepository matchStatusRepository;
     private final MatchParticipantRepository matchParticipantRepository;
-    private final PasswordEncoder passwordEncoder;
 
     private static final int MAX_ATTEMPTS = 50;
     private static final int DEFAULT_STREAK_COUNT = 1;
@@ -98,7 +96,7 @@ public class MatchService {
             throw new IllegalArgumentException("Invalid category code: " + request.getCategoryCode());
         }
 
-        String encodedPassword = request.getIsPublic() ? null : passwordEncoder.encode(request.getPassword());
+        String encodedPassword = request.getIsPublic() ? null : request.getPassword();
 
         return MatchInfo.builder()
                 .createId(user)

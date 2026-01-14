@@ -1,5 +1,6 @@
 package begin_a_gain.omokwang.match_detail.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.Builder;
@@ -27,5 +28,12 @@ public class MatchSettingResponse {
 
     @Schema(description = "대국 카테고리", example = "운동")
     private String category;
+
+    @JsonProperty("isPublic")
+    @Schema(description = "공개 여부", example = "true")
+    private boolean publicMatch;
+
+    @Schema(description = "비밀번호", example = "1234")
+    private String password;
 
 }
