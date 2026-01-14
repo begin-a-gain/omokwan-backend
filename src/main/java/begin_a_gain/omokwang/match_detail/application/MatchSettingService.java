@@ -33,6 +33,8 @@ public class MatchSettingService {
                 .repeatDayTypes(matchDayRepository.findDayOfWeeksByMatchId(matchId))
                 .maxParticipants(matchInfo.getMaxParticipants())
                 .category(matchInfo.getCategory())
+                .publicMatch(matchInfo.isPublic())
+                .password(matchInfo.getPassword())
                 .build();
     }
 

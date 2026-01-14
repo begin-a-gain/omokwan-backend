@@ -19,8 +19,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,6 @@ public class MatchDetailService {
     private final MatchParticipantRepository matchParticipantRepository;
     private final MatchStatusRepository matchStatusRepository;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public JoinMatchResponse joinMatch(Long matchId, JoinMatchRequest request) {
@@ -52,9 +51,8 @@ public class MatchDetailService {
     private void checkMatchPassword(JoinMatchRequest request, MatchInfo match) {
         if (!match.isPublic()) {
             var inputPassword = request.getPassword();
-            var encodedPassword = match.getPassword();
-            boolean result = passwordEncoder.matches(inputPassword, encodedPassword);
-            if (!result) {
+            boolean passwordMatches = Objects.equals(inputPassword, match.getPassword());
+            if (!passwordMatches) {
                 throw new CustomException(ErrorCode.PASSWORD_MISMATCH);
             }
         }
