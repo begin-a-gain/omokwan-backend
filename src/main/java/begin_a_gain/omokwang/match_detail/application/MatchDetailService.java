@@ -127,14 +127,14 @@ public class MatchDetailService {
 
     @Transactional(readOnly = true)
     public MatchParticipantsResponse getParticipants(Long matchId) {
-        var match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
         var users = matchParticipantRepository.findUsersByMatchId(matchId);
         var userInfo = users.stream()
                 .map(u -> ParticipantInfo.builder()
                         .userId(u.getId())
                         .nickname(u.getNickname())
                         .combo(matchStatusRepository.comboNumberByMatchIdAndUserId(matchId, u.getId()))
+                        .participantNumbers(
+                                matchStatusRepository.participantNumberByMatchIdAndUserId(matchId, u.getId()))
                         .participantDays(getParticipantDays(matchId, u.getId()))
                         .build())
                 .toList();

@@ -16,6 +16,9 @@ public class ParticipantInfo {
     @Schema(description = "오목 콤보", example = "5")
     private int combo;
 
+    @Schema(description = "오목알 개수", example = "2")
+    private int participantNumbers;
+
     @Schema(description = "참여일 수", example = "7")
     private long participantDays;
 
