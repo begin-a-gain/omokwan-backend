@@ -10,6 +10,7 @@ import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
 import begin_a_gain.omokwang.match_detail.dto.KickUserResponse;
+import begin_a_gain.omokwang.match_detail.dto.LeaveMatchResponse;
 import begin_a_gain.omokwang.match_detail.dto.MatchParticipantsResponse;
 import begin_a_gain.omokwang.match_detail.dto.ParticipantInfo;
 import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
@@ -168,6 +169,18 @@ public class MatchDetailService {
         if (!hostUserId.equals(currentUserId)) {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
+    }
+
+    @Transactional
+    public LeaveMatchResponse leaveMatch(Long matchId) {
+        var userId = getCurrentUser().getId();
+        var matchParticipant = matchParticipantRepository.findByMatchIdAndUserId(matchId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+        matchParticipant.leaveNow(clock);
+
+        return LeaveMatchResponse.builder()
+                .userId(userId)
+                .build();
     }
 
 
