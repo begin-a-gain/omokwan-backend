@@ -6,6 +6,7 @@ import begin_a_gain.omokwang.match_detail.application.MatchDetailService;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
 import begin_a_gain.omokwang.match_detail.dto.KickUserResponse;
+import begin_a_gain.omokwang.match_detail.dto.LeaveMatchResponse;
 import begin_a_gain.omokwang.match_detail.dto.MatchParticipantsResponse;
 import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -103,6 +105,26 @@ public class MatchDetailController {
             @Parameter(description = "Unique ID of the user", example = "200")
             @PathVariable("userId") long userId) {
         var response = matchDetailService.kickUserFromMatch(matchId, userId);
+        return ResponseEntity.ok(CommonResponse.success(response));
+    }
+
+    @Operation(summary = "대국 나가기", description = "대국 나가기")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "403", description = "Access denied",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @DeleteMapping("/matches/{matchId}/participants/me")
+    public ResponseEntity<CommonResponse<LeaveMatchResponse>> leaveMatch(
+            @Parameter(description = "Unique ID of the match", example = "100")
+            @PathVariable("matchId") long matchId) {
+        var response = matchDetailService.leaveMatch(matchId);
         return ResponseEntity.ok(CommonResponse.success(response));
     }
 

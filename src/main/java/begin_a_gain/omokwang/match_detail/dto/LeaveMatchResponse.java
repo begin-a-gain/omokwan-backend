@@ -6,9 +6,9 @@ import lombok.Getter;
 
 @Getter
 @Builder
-@Schema(description = "Kick User Response")
-public class KickUserResponse {
-    @Schema(description = "추방된 사용자", example = "1234")
+@Schema(description = "Leave User Response")
+public class LeaveMatchResponse {
+    @Schema(description = "대국 나간 사용자", example = "1234")
     private Long userId;
 
 }
