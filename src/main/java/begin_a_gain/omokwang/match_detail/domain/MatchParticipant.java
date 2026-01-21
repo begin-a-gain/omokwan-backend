@@ -61,4 +61,12 @@ public class MatchParticipant {
     public void leaveNow(Clock clock) {
         this.leaveDate = LocalDate.now(clock);
     }
+
+    public boolean isKicked() {
+        return kickedDate != null;
+    }
+
+    public boolean isLeft() {
+        return leaveDate != null && kickedDate == null;
+    }
 }
