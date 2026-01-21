@@ -263,6 +263,10 @@ public class MatchService {
     }
 
     public MatchBoardResponse getBoardForMatch(MatchBoardRequest request) {
+        var matchParticipant = matchParticipantRepository.findByMatchIdAndUserId(request.getMatchId(), getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+        checkUserStatus(matchParticipant);
+
         var userInfos = getUserInfo(request.getMatchId());
         validateUserId(userInfos);
         validateSearchDate(request);
@@ -278,6 +282,16 @@ public class MatchService {
                 .hasNext(checkHasNext(nextCursor))
                 .isTodayMatchCompleted(getMatchCompleted(request))
                 .build();
+    }
+
+    private void checkUserStatus(MatchParticipant matchParticipant) {
+        if (matchParticipant.isKicked()) {
+            throw new CustomException(ErrorCode.KICKED_USER);
+        }
+
+        if (matchParticipant.isLeft()) {
+            throw new CustomException(ErrorCode.LEFT_USER);
+        }
     }
 
     private void validateUserId(List<UserInfo> userInfos) {
