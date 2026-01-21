@@ -9,14 +9,15 @@ import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
+import begin_a_gain.omokwang.match_detail.dto.KickUserResponse;
 import begin_a_gain.omokwang.match_detail.dto.MatchParticipantsResponse;
 import begin_a_gain.omokwang.match_detail.dto.ParticipantInfo;
 import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +33,7 @@ public class MatchDetailService {
     private final MatchParticipantRepository matchParticipantRepository;
     private final MatchStatusRepository matchStatusRepository;
     private final UserRepository userRepository;
+    private final Clock clock;
 
     @Transactional
     public JoinMatchResponse joinMatch(Long matchId, JoinMatchRequest request) {
@@ -112,8 +114,7 @@ public class MatchDetailService {
         var matchInfo = matchParticipantRepository.findByMatchIdAndUserId(matchId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
         var joinDay = matchInfo.getJoinDate();
-        var today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        return ChronoUnit.DAYS.between(joinDay, today) + 1;
+        return ChronoUnit.DAYS.between(joinDay, LocalDate.now(clock)) + 1;
     }
 
     private void checkMatchCapacityFull(Long matchId, int maxParticipants) {
@@ -141,4 +142,33 @@ public class MatchDetailService {
                 .userInfo(userInfo)
                 .build();
     }
+
+
+    @Transactional
+    public KickUserResponse kickUserFromMatch(Long matchId, Long userId) {
+        requireHost(matchId);
+
+        var matchParticipant = matchParticipantRepository.findByMatchIdAndUserId(matchId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+        matchParticipant.kickNow(clock);
+
+        return KickUserResponse.builder()
+                .userId(userId)
+                .build();
+    }
+
+    private void requireHost(Long matchId) {
+        var currentUserId = getCurrentUser().getId();
+
+        var hostUserId = matchParticipantRepository
+                .findByMatchIdAndIsHostTrue(matchId)
+                .map(p -> p.getUser().getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
+        if (!hostUserId.equals(currentUserId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+    }
+
+
 }

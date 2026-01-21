@@ -5,6 +5,7 @@ import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.match_detail.application.MatchDetailService;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
+import begin_a_gain.omokwang.match_detail.dto.KickUserResponse;
 import begin_a_gain.omokwang.match_detail.dto.MatchParticipantsResponse;
 import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,6 +81,28 @@ public class MatchDetailController {
             @Parameter(description = "Unique ID of the user", example = "200")
             @PathVariable("userId") long userId) {
         var response = matchDetailService.getUserProfileByMatchId(matchId, userId);
+        return ResponseEntity.ok(CommonResponse.success(response));
+    }
+
+    @Operation(summary = "유저 추방하기", description = "대국별 유저 추방하기.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "403", description = "Access denied",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PostMapping("/matches/{matchId}/users/{userId}/kick")
+    public ResponseEntity<CommonResponse<KickUserResponse>> kickUser(
+            @Parameter(description = "Unique ID of the match", example = "100")
+            @PathVariable("matchId") long matchId,
+            @Parameter(description = "Unique ID of the user", example = "200")
+            @PathVariable("userId") long userId) {
+        var response = matchDetailService.kickUserFromMatch(matchId, userId);
         return ResponseEntity.ok(CommonResponse.success(response));
     }
 
