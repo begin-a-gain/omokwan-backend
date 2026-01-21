@@ -13,13 +13,16 @@ import org.springframework.data.repository.query.Param;
 public interface MatchParticipantRepository extends JpaRepository<MatchParticipant, Long> {
     void deleteByUserId(Long userId);
 
-    @Query("select mp.user from MatchParticipant mp where mp.match.id = :matchId "
-            + "order by mp.joinOrder asc")
+    @Query("""
+                select mp.user
+                from MatchParticipant mp
+                where mp.match.id = :matchId
+                  and mp.leaveDate IS NULL
+                order by mp.joinOrder asc
+            """)
     List<User> findUsersByMatchId(@Param("matchId") Long matchId);
 
-    @Query("select mp from MatchParticipant mp where mp.match.id = :matchId and mp.user.id = :userId")
-    Optional<MatchParticipant> findByMatchIdAndUserId(@Param("matchId") Long matchId,
-                                                      @Param("userId") Long userId);
+    Optional<MatchParticipant> findByMatchIdAndUserId(Long matchId, Long userId);
 
     @Query("SELECT COALESCE(MAX(mp.joinOrder), 0) FROM MatchParticipant mp WHERE mp.match.id = :matchId")
     int findMaxJoinOrderByMatchId(@Param("matchId") Long matchId);

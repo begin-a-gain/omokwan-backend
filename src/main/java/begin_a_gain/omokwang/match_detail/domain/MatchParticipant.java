@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "match_participant", uniqueConstraints = {@UniqueConstraint(columnNames = {"dauguk_id", "user_id"})})
+@Table(name = "match_participant", uniqueConstraints = {@UniqueConstraint(columnNames = {"match_id", "user_id"})})
 public class MatchParticipant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,9 +46,15 @@ public class MatchParticipant {
 
     private boolean isHost;
 
+    private LocalDate kickedDate;
+
     @PrePersist
     public void prePersist() {
         this.joinDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
     }
 
+    public void kickNow(Clock clock) {
+        this.leaveDate = LocalDate.now(clock);
+        this.kickedDate = LocalDate.now(clock);
+    }
 }

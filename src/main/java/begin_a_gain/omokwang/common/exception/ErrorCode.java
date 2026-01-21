@@ -12,7 +12,8 @@ public enum ErrorCode {
     MATCH_NOT_FOUND("E1007", HttpStatus.NOT_FOUND),
     MATCH_CAPACITY_FULL("E1008", HttpStatus.CONFLICT),
     NOT_FOUND("E1009", HttpStatus.NOT_FOUND),
-    NOT_EXIST_USER("E1010", HttpStatus.UNAUTHORIZED);
+    NOT_EXIST_USER("E1010", HttpStatus.UNAUTHORIZED),
+    FORBIDDEN("E1011", HttpStatus.FORBIDDEN);
 
     private final String code;
     private final HttpStatus httpStatus;
