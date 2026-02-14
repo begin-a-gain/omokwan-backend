@@ -22,7 +22,6 @@ public class MatchListService {
         var query = convertToQuery(request);
 
         var matcheList = matchRepository.findMatches(query);
-
         boolean hasNext = matcheList.size() > query.getPageSize();
         if (hasNext) {
             matcheList.remove(matcheList.size() - 1);
