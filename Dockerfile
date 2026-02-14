@@ -1,5 +1,5 @@
-# Liberica OpenJDK 17 기반의 경량 Alpine 이미지 사용
-FROM bellsoft/liberica-openjdk-alpine:17
+# Liberica OpenJDK 21 기반의 경량 Alpine 이미지 사용
+FROM bellsoft/liberica-openjdk-alpine:21
 
 # 빌드된 JAR 파일의 이름을 ARG로 받음
 ARG JAR_FILE=build/libs/omokwang-0.0.1-SNAPSHOT.jar
