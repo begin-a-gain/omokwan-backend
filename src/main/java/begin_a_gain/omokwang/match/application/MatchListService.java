@@ -20,6 +20,7 @@ public class MatchListService {
     @Transactional(readOnly = true)
     public MatchAllControllerResponse findAllMatch(MatchAllRequest request) {
         var query = convertToQuery(request);
+
         var matcheList = matchRepository.findMatches(query);
 
         boolean hasNext = matcheList.size() > query.getPageSize();
