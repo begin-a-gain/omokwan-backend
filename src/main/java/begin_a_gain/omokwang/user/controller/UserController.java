@@ -6,6 +6,7 @@ import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.user.dto.DeletionSurveyRequest;
+import begin_a_gain.omokwang.user.dto.MyPageResponse;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,6 +49,21 @@ public class UserController {
         User user = userService.findBySocialId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_USER));
         return ResponseEntity.ok(CommonResponse.success(user));
+    }
+
+    @Operation(summary = "My page", description = "My page by userId")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/{userId}/mypage")
+    public ResponseEntity<CommonResponse<MyPageResponse>> myPage(
+            @PathVariable("userId") Long userId) {
+        var response = userService.getMyPage(userId);
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 
     @Operation(

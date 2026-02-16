@@ -1,13 +1,20 @@
 package begin_a_gain.omokwang.user.service;
 
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
+import begin_a_gain.omokwang.common.exception.CustomException;
+import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.user.dto.DeletionSurvey;
 import begin_a_gain.omokwang.user.dto.DeletionSurveyRequest;
+import begin_a_gain.omokwang.user.dto.MyPageMatchSummaryProjection;
+import begin_a_gain.omokwang.user.dto.MyPageMatchSummaryResponse;
+import begin_a_gain.omokwang.user.dto.MyPageResponse;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.DeletionSurveyRepository;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -87,4 +94,55 @@ public class UserService {
 
         deletionSurveyRepository.save(survey);
     }
+
+    @Transactional
+    public MyPageResponse getMyPage(Long userId) {
+        var user = findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_USER));
+        var inProgressMatches = matchParticipantRepository.findInProgressMatchSummaries(userId).stream()
+                .map(this::toMyPageMatchSummary)
+                .toList();
+        var completedMatches = matchParticipantRepository.findCompletedMatchSummaries(userId).stream()
+                .map(this::toMyPageMatchSummary)
+                .toList();
+
+        return MyPageResponse.builder()
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .inProgressMatchCount(matchParticipantRepository.countByUser_IdAndLeaveDateIsNull(userId))
+                .completedMatchCount(matchParticipantRepository.countByUser_IdAndLeaveDateIsNotNull(userId))
+                .inProgressMatches(inProgressMatches)
+                .completedMatches(completedMatches)
+                .build();
+    }
+
+    private MyPageMatchSummaryResponse toMyPageMatchSummary(MyPageMatchSummaryProjection projection) {
+        var dayOfWeeks = parseDayOfWeeks(projection.getDayOfWeeks());
+
+        return MyPageMatchSummaryResponse.builder()
+                .matchId(projection.getMatchId())
+                .matchName(projection.getMatchName())
+                .participantDays(getOrZero(projection.getParticipantDays()))
+                .comboCount(getOrZero(projection.getComboCount()))
+                .participantNumbers(getOrZero(projection.getParticipantNumbers()))
+                .dayOfWeeks(dayOfWeeks)
+                .build();
+    }
+
+    private List<Integer> parseDayOfWeeks(String dayOfWeeks) {
+        if (dayOfWeeks == null || dayOfWeeks.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        return java.util.Arrays.stream(dayOfWeeks.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .map(Integer::parseInt)
+                .toList();
+    }
+
+    private int getOrZero(Integer value) {
+        return value == null ? 0 : value;
+    }
+
 }
