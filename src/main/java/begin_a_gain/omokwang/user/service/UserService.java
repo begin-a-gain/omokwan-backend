@@ -97,6 +97,8 @@ public class UserService {
 
     @Transactional
     public MyPageResponse getMyPage(Long userId) {
+        validateMyPageAccess(userId);
+
         var user = findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_USER));
         var inProgressMatches = matchParticipantRepository.findInProgressMatchSummaries(userId).stream()
@@ -114,6 +116,16 @@ public class UserService {
                 .inProgressMatches(inProgressMatches)
                 .completedMatches(completedMatches)
                 .build();
+    }
+
+    private void validateMyPageAccess(Long requestedUserId) {
+        var socialId = SecurityUtil.getCurrentUserSocialId();
+        var currentUser = userRepository.findBySocialId(socialId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_USER));
+
+        if (!currentUser.getId().equals(requestedUserId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
     }
 
     private MyPageMatchSummaryResponse toMyPageMatchSummary(MyPageMatchSummaryProjection projection) {
