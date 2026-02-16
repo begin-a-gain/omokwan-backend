@@ -2,6 +2,7 @@ package begin_a_gain.omokwang.match_detail.repository;
 
 
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
+import begin_a_gain.omokwang.user.dto.MyPageMatchSummaryProjection;
 import begin_a_gain.omokwang.user.dto.User;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,10 @@ import org.springframework.data.repository.query.Param;
 
 public interface MatchParticipantRepository extends JpaRepository<MatchParticipant, Long> {
     void deleteByUserId(Long userId);
+
+    long countByUser_IdAndLeaveDateIsNull(Long userId);
+
+    long countByUser_IdAndLeaveDateIsNotNull(Long userId);
 
     @Query("""
                 select mp.user
@@ -47,5 +52,61 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
                    AND mp.user.id = :userId
             """)
     int setHost(@Param("matchId") Long matchId, @Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT
+                mi.id AS matchId,
+                mi.name AS matchName,
+                COALESCE(stats.participant_days, 0) AS participantDays,
+                COALESCE(stats.combo_count, 0) AS comboCount,
+                COALESCE(stats.participant_number, 0) AS participantNumbers,
+                GROUP_CONCAT(DISTINCT md.day_of_week ORDER BY md.day_of_week SEPARATOR ',') AS dayOfWeeks
+            FROM match_participant mp
+            JOIN match_info mi ON mi.id = mp.match_id
+            LEFT JOIN match_day md ON md.match_id = mi.id
+            LEFT JOIN (
+                SELECT
+                    ms.match_id AS match_id,
+                    ms.create_id AS user_id,
+                    COUNT(*) AS participant_days,
+                    SUM(CASE WHEN MOD(ms.streak_count, 5) = 0 THEN 1 ELSE 0 END) AS combo_count,
+                    COUNT(*) AS participant_number
+                FROM match_status ms
+                GROUP BY ms.match_id, ms.create_id
+            ) stats ON stats.match_id = mi.id AND stats.user_id = mp.user_id
+            WHERE mp.user_id = :userId
+              AND mp.leave_date IS NULL
+            GROUP BY mi.id, mi.name, stats.participant_days, stats.combo_count, stats.participant_number
+            ORDER BY mi.create_date DESC, mi.id DESC
+            """, nativeQuery = true)
+    List<MyPageMatchSummaryProjection> findInProgressMatchSummaries(@Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT
+                mi.id AS matchId,
+                mi.name AS matchName,
+                COALESCE(stats.participant_days, 0) AS participantDays,
+                COALESCE(stats.combo_count, 0) AS comboCount,
+                COALESCE(stats.participant_number, 0) AS participantNumbers,
+                GROUP_CONCAT(DISTINCT md.day_of_week ORDER BY md.day_of_week SEPARATOR ',') AS dayOfWeeks
+            FROM match_participant mp
+            JOIN match_info mi ON mi.id = mp.match_id
+            LEFT JOIN match_day md ON md.match_id = mi.id
+            LEFT JOIN (
+                SELECT
+                    ms.match_id AS match_id,
+                    ms.create_id AS user_id,
+                    COUNT(*) AS participant_days,
+                    SUM(CASE WHEN MOD(ms.streak_count, 5) = 0 THEN 1 ELSE 0 END) AS combo_count,
+                    COUNT(*) AS participant_number
+                FROM match_status ms
+                GROUP BY ms.match_id, ms.create_id
+            ) stats ON stats.match_id = mi.id AND stats.user_id = mp.user_id
+            WHERE mp.user_id = :userId
+              AND mp.leave_date IS NOT NULL
+            GROUP BY mi.id, mi.name, stats.participant_days, stats.combo_count, stats.participant_number
+            ORDER BY MAX(mp.leave_date) DESC, mi.id DESC
+            """, nativeQuery = true)
+    List<MyPageMatchSummaryProjection> findCompletedMatchSummaries(@Param("userId") Long userId);
 
 }
