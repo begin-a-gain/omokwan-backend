@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findBySocialIdAndPlatform(Long socialId, String platform);
 
+    boolean existsByIdAndNicknameIsNotNull(Long id);
+
     @Query("SELECT CASE WHEN u.nickname IS NULL THEN false ELSE true END FROM User u WHERE u.socialId = :socialId")
     boolean existsNicknameBySocialId(@Param("socialId") Long socialId);
 }

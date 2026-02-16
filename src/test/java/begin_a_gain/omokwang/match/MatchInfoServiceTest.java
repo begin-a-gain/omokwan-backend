@@ -8,6 +8,7 @@ import begin_a_gain.omokwang.match.repository.MatchDayRepository;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -77,8 +78,8 @@ public class MatchInfoServiceTest {
     void
 
     createAndFindMatchById11() {
-
-        List<MatchInfo> findMatchList = repository.findMatchByUserIdAndDayOfWeek(user.getId(), 1);
+        LocalDate date = LocalDate.of(2026, 1, 1);
+        List<MatchInfo> findMatchList = repository.findMatchByUserIdAndDayOfWeek(user.getId(), 1, date);
         assertThat(findMatchList.get(0)).isEqualTo(savedMatch);
     }
 

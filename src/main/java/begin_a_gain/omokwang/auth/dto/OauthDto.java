@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OauthDto {
     private String accessToken;
-    private long socialId;
+    private long userId;
 }
-

@@ -71,9 +71,9 @@ public class MatchDetailService {
     }
 
     private User getCurrentUser() {
-        var socialId = SecurityUtil.getCurrentUserSocialId();
-        return userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
+        var userId = SecurityUtil.getCurrentUserId();
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
     }
 
     private int getJoinOrder(Long matchId) {

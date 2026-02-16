@@ -10,8 +10,8 @@ public class SecurityUtil {
     private SecurityUtil() {
     }
 
-    // 현재 인증된 사용자의 ID
-    public static long getCurrentUserSocialId() {
+    // 현재 인증된 사용자의 내부 user ID
+    public static long getCurrentUserId() {
 
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -27,5 +27,10 @@ public class SecurityUtil {
         }
 
         return userId;
+    }
+
+    @Deprecated
+    public static long getCurrentUserSocialId() {
+        return getCurrentUserId();
     }
 }

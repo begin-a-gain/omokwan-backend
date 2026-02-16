@@ -28,8 +28,8 @@ public class UserService {
     private final MatchParticipantRepository matchParticipantRepository;
     private final DeletionSurveyRepository deletionSurveyRepository;
 
-    public void save(User user) {
-        userRepository.save(user);
+    public User save(User user) {
+        return userRepository.save(user);
     }
 
     public Optional<User> findById(Long id) {
@@ -45,15 +45,15 @@ public class UserService {
     }
 
     @Transactional
-    public void updateRefreshToken(Long id, String refreshToken) {
-        User user = userRepository.findBySocialId(id)
+    public void updateRefreshToken(Long userId, String refreshToken) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setRefreshToken(refreshToken);
     }
 
-    public boolean isSignUpComplete(long socialId) {
-        return userRepository.existsNicknameBySocialId(socialId);
+    public boolean isSignUpComplete(long userId) {
+        return userRepository.existsByIdAndNicknameIsNotNull(userId);
     }
 
     public Optional<User> findBySocialIdAndPlatform(Long socialId, String platform) {
@@ -61,8 +61,8 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUser(long socialId) {
-        var user = userRepository.findBySocialId(socialId)
+    public void deleteUser(long userId) {
+        var user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         matchParticipantRepository.deleteByUserId(user.getId());
         updateUserInfo(user);
@@ -83,8 +83,8 @@ public class UserService {
 
     @Transactional
     public void deletionSurvey(DeletionSurveyRequest request) {
-        long socialId = SecurityUtil.getCurrentUserSocialId();
-        var user = userRepository.findBySocialId(socialId)
+        long userId = SecurityUtil.getCurrentUserId();
+        var user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         DeletionSurvey survey = DeletionSurvey.builder()
                 .userId(user.getId())
@@ -119,11 +119,8 @@ public class UserService {
     }
 
     private void validateMyPageAccess(Long requestedUserId) {
-        var socialId = SecurityUtil.getCurrentUserSocialId();
-        var currentUser = userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_USER));
-
-        if (!currentUser.getId().equals(requestedUserId)) {
+        var currentUserId = SecurityUtil.getCurrentUserId();
+        if (!Long.valueOf(currentUserId).equals(requestedUserId)) {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
     }

@@ -30,8 +30,8 @@ public class NicknameService {
 
     @Transactional
     public void updateNickname(NicknameUpdateDto nicknameUpdateParam) {
-        long socialId = nicknameUpdateParam.getSocialId();
-        User user = userRepository.findBySocialId(socialId)
+        long userId = nicknameUpdateParam.getUserId();
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         String nickname = nicknameUpdateParam.getNickname();

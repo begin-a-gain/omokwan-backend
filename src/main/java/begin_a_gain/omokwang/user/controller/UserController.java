@@ -45,8 +45,8 @@ public class UserController {
     })
     @GetMapping("/info")
     public ResponseEntity<CommonResponse<User>> info() {
-        final long userId = SecurityUtil.getCurrentUserSocialId();
-        User user = userService.findBySocialId(userId)
+        final long userId = SecurityUtil.getCurrentUserId();
+        User user = userService.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_USER));
         return ResponseEntity.ok(CommonResponse.success(user));
     }
@@ -84,8 +84,8 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/me")
     public void deleteUser() {
-        long socialId = SecurityUtil.getCurrentUserSocialId();
-        userService.deleteUser(socialId);
+        long userId = SecurityUtil.getCurrentUserId();
+        userService.deleteUser(userId);
     }
 
     @Operation(

@@ -39,9 +39,9 @@ public class KakaoOauthService {
                 .build();
 
         Optional<User> existingUser = userService.findBySocialIdAndPlatform(kakaoInfoDto.getId(), "kakao");
-        if (existingUser.isEmpty()) {
-            userService.save(user);
+        if (existingUser.isPresent()) {
+            return existingUser.get();
         }
-        return user;
+        return userService.save(user);
     }
 }

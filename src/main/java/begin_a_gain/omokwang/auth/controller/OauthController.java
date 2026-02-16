@@ -1,7 +1,8 @@
 package begin_a_gain.omokwang.auth.controller;
 
+import begin_a_gain.omokwang.auth.dto.AppleLoginRequestDto;
+import begin_a_gain.omokwang.auth.dto.KakaoLoginRequestDto;
 import begin_a_gain.omokwang.auth.dto.OauthDto;
-import begin_a_gain.omokwang.auth.dto.OauthRequestDto;
 import begin_a_gain.omokwang.auth.dto.OauthResponseDto;
 import begin_a_gain.omokwang.auth.dto.RefreshTokenResponseDto;
 import begin_a_gain.omokwang.auth.service.OauthService;
@@ -19,11 +20,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,35 +34,35 @@ import org.springframework.web.bind.annotation.RestController;
 public class OauthController {
     private final OauthService oauthService;
     private final UserService userService;
-    // 생성자 주입 - 테스트 편의성, 불변 보장, 의존성 명확성
 
-    @Operation(summary = "Oauth 로그인", description = "Oauth 로그인을 진행한다.")
+    @Operation(summary = "Kakao 로그인", description = "Kakao Access Token으로 로그인을 진행한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공")
-
     })
-    @PostMapping("/auth/login/{provider}")
-    public ResponseEntity<CommonResponse<OauthResponseDto>> login(
-            @PathVariable("provider") @Schema(example = "kakao, apple") String provider,
-            @RequestBody OauthRequestDto oauthRequestDto,
+    @PostMapping("/auth/login/kakao")
+    public ResponseEntity<CommonResponse<OauthResponseDto>> loginWithKakao(
+            @Valid @RequestBody KakaoLoginRequestDto request,
             HttpServletResponse response) {
-
-        if (!provider.equals("kakao") && !provider.equals("apple")) {
-            throw new CustomException(ErrorCode.BAD_REQUEST);
-        }
-
-        OauthResponseDto oauthResponseDto = new OauthResponseDto();
-        switch (provider) {
-            case "kakao":
-                OauthDto oauthInfo = oauthService.loginWithKakao(oauthRequestDto.getAccessToken(), response);
-
-                boolean signUpComplete = userService.isSignUpComplete(oauthInfo.getSocialId());
-                oauthResponseDto = new OauthResponseDto(oauthInfo.getAccessToken(), signUpComplete);
-        }
+        OauthDto oauthInfo = oauthService.loginWithKakao(request.getAccessToken(), response);
+        boolean signUpComplete = userService.isSignUpComplete(oauthInfo.getUserId());
+        var oauthResponseDto = new OauthResponseDto(oauthInfo.getAccessToken(), signUpComplete);
         return ResponseEntity.ok(CommonResponse.success(oauthResponseDto));
     }
 
-    // 리프레시 토큰으로 액세스토큰 재발급 받는 로직
+    @Operation(summary = "Apple 로그인", description = "Apple Identity Token으로 로그인을 진행한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공")
+    })
+    @PostMapping("/auth/login/apple")
+    public ResponseEntity<CommonResponse<OauthResponseDto>> loginWithApple(
+            @Valid @RequestBody AppleLoginRequestDto request,
+            HttpServletResponse response) {
+        OauthDto oauthInfo = oauthService.loginWithApple(request.getIdentityToken(), response);
+        boolean signUpComplete = userService.isSignUpComplete(oauthInfo.getUserId());
+        var oauthResponseDto = new OauthResponseDto(oauthInfo.getAccessToken(), signUpComplete);
+        return ResponseEntity.ok(CommonResponse.success(oauthResponseDto));
+    }
+
     @Operation(summary = "Access Token 재발급", description = "리프레시 토큰과 액세스 토큰을 재발급한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Token 재발급 성공"),
@@ -78,13 +78,12 @@ public class OauthController {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        Cookie refreshTokenCookie = Arrays.stream(list).filter(cookie -> cookie.getName().equals("refresh_token"))
-                .collect(Collectors.toList()).get(0);
+        Cookie refreshTokenCookie = Arrays.stream(list)
+                .filter(cookie -> cookie.getName().equals("refresh_token"))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_REFRESH_TOKEN));
 
-        if (refreshTokenCookie == null) {
-            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
-        }
-        var response = oauthService.refreshToken(refreshTokenCookie.getValue());
-        return ResponseEntity.ok(CommonResponse.success(response));
+        var refreshResponse = oauthService.refreshToken(refreshTokenCookie.getValue());
+        return ResponseEntity.ok(CommonResponse.success(refreshResponse));
     }
 }
