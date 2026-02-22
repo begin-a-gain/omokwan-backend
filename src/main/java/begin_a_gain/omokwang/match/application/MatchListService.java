@@ -44,10 +44,10 @@ public class MatchListService {
     }
 
     private Long getUserId() {
-        var socialId = SecurityUtil.getCurrentUserSocialId();
-        var user = userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
-        return user.getId();
+        var userId = SecurityUtil.getCurrentUserId();
+        userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+        return userId;
     }
 
 }

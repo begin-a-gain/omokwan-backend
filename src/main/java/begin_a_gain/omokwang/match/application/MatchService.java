@@ -67,9 +67,9 @@ public class MatchService {
     @Transactional
     public CreateMatchResponse createMatch(CreateMatchRequest request) {
 
-        var socialId = SecurityUtil.getCurrentUserSocialId();
-        var user = userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
+        var userId = SecurityUtil.getCurrentUserId();
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
         var match = mapToMatch(request, user);
 
         var savedMatch = matchRepository.save(match);
@@ -144,8 +144,7 @@ public class MatchService {
 
     public List<MatchByDayResponse> findMatchByDay(LocalDate date) {
         var dayOfWeek = getDayValue(date);
-        var socialId = SecurityUtil.getCurrentUserSocialId();
-        var userId = userRepository.findBySocialId(socialId).map(User::getId).orElse(null);
+        var userId = SecurityUtil.getCurrentUserId();
 
         var matchList = matchRepository.findMatchByUserIdAndDayOfWeek(userId, dayOfWeek, date);
 
@@ -241,10 +240,10 @@ public class MatchService {
     }
 
     private Long getUserId() {
-        var socialId = SecurityUtil.getCurrentUserSocialId();
-        var user = userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + socialId));
-        return user.getId();
+        var userId = SecurityUtil.getCurrentUserId();
+        userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+        return userId;
     }
 
 

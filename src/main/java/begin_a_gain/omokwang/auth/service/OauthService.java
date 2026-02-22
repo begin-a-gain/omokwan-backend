@@ -18,17 +18,23 @@ public class OauthService {
     private final UserService userService;
     private final JwtTokenService jwtTokenService;
     private final KakaoOauthService kakaoOauthService;
+    private final AppleOauthService appleOauthService;
 
     //카카오 로그인
     public OauthDto loginWithKakao(String accessToken, HttpServletResponse response) {
         User user = kakaoOauthService.getUserProfileByToken(accessToken);
-        return new OauthDto(getTokens(user.getSocialId(), response), user.getSocialId());
+        return new OauthDto(getTokens(user, response), user.getId());
     }
 
-    public String getTokens(Long id, HttpServletResponse response) {
-        String accessToken = jwtTokenService.createAccessToken(id.toString());
+    public OauthDto loginWithApple(String identityToken, HttpServletResponse response) {
+        User user = appleOauthService.getUserProfileByIdentityToken(identityToken);
+        return new OauthDto(getTokens(user, response), user.getId());
+    }
+
+    public String getTokens(User user, HttpServletResponse response) {
+        String accessToken = jwtTokenService.createAccessToken(user.getId().toString());
         String refreshToken = jwtTokenService.createRefreshToken();
-        userService.updateRefreshToken(id, refreshToken);
+        userService.updateRefreshToken(user.getId(), refreshToken);
 
         jwtTokenService.addRefreshTokenToCookie(refreshToken, response);
         return accessToken;
@@ -45,7 +51,7 @@ public class OauthService {
 
         var accessToken = getAccessToken(user);
         var newRefreshToken = jwtTokenService.createRefreshToken();
-        userService.updateRefreshToken(user.getSocialId(), newRefreshToken);
+        userService.updateRefreshToken(user.getId(), newRefreshToken);
 
         return RefreshTokenResponseDto.builder()
                 .accessToken(accessToken)
@@ -55,7 +61,7 @@ public class OauthService {
 
 
     private String getAccessToken(User user) {
-        return jwtTokenService.createAccessToken(user.getSocialId().toString());
+        return jwtTokenService.createAccessToken(user.getId().toString());
     }
 
 }

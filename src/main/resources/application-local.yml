@@ -46,3 +46,6 @@ management:
   endpoint:
     health:
       show-details: always
+
+apple:
+  client-id: com.begin-a-gain.omokwang.dev

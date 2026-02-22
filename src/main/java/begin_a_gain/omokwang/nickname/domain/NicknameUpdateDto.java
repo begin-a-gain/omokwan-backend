@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class NicknameUpdateDto {
-    private long socialId;
+    private long userId;
     private String nickname;
 }

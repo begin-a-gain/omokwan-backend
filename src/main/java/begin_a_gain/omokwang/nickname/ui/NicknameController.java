@@ -33,7 +33,7 @@ public class NicknameController {
     })
     @PutMapping("/nicknames")
     public ResponseEntity<CommonResponse<String>> updateNickname(@RequestBody NicknameRequest nicknameRequest) {
-        final long userId = SecurityUtil.getCurrentUserSocialId();
+        final long userId = SecurityUtil.getCurrentUserId();
         String nickname = nicknameRequest.getNickname();
         NicknameUpdateDto nicknameUpdateParam = new NicknameUpdateDto(userId, nickname);
 
