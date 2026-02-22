@@ -57,7 +57,7 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
             SELECT
                 mi.id AS matchId,
                 mi.name AS matchName,
-                COALESCE(stats.participant_days, 0) AS participantDays,
+                GREATEST(DATEDIFF(COALESCE(mp.leave_date, CURRENT_DATE), mp.join_date) + 1, 0) AS participantDays,
                 COALESCE(stats.combo_count, 0) AS comboCount,
                 COALESCE(stats.participant_number, 0) AS participantNumbers,
                 GROUP_CONCAT(DISTINCT md.day_of_week ORDER BY md.day_of_week SEPARATOR ',') AS dayOfWeeks
@@ -68,7 +68,6 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
                 SELECT
                     ms.match_id AS match_id,
                     ms.create_id AS user_id,
-                    COUNT(*) AS participant_days,
                     SUM(CASE WHEN MOD(ms.streak_count, 5) = 0 THEN 1 ELSE 0 END) AS combo_count,
                     COUNT(*) AS participant_number
                 FROM match_status ms
@@ -76,7 +75,7 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
             ) stats ON stats.match_id = mi.id AND stats.user_id = mp.user_id
             WHERE mp.user_id = :userId
               AND mp.leave_date IS NULL
-            GROUP BY mi.id, mi.name, stats.participant_days, stats.combo_count, stats.participant_number
+            GROUP BY mi.id, mi.name, mp.join_date, mp.leave_date, stats.combo_count, stats.participant_number
             ORDER BY mi.create_date DESC, mi.id DESC
             """, nativeQuery = true)
     List<MyPageMatchSummaryProjection> findInProgressMatchSummaries(@Param("userId") Long userId);
@@ -85,7 +84,7 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
             SELECT
                 mi.id AS matchId,
                 mi.name AS matchName,
-                COALESCE(stats.participant_days, 0) AS participantDays,
+                GREATEST(DATEDIFF(COALESCE(mp.leave_date, CURRENT_DATE), mp.join_date) + 1, 0) AS participantDays,
                 COALESCE(stats.combo_count, 0) AS comboCount,
                 COALESCE(stats.participant_number, 0) AS participantNumbers,
                 GROUP_CONCAT(DISTINCT md.day_of_week ORDER BY md.day_of_week SEPARATOR ',') AS dayOfWeeks
@@ -96,7 +95,6 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
                 SELECT
                     ms.match_id AS match_id,
                     ms.create_id AS user_id,
-                    COUNT(*) AS participant_days,
                     SUM(CASE WHEN MOD(ms.streak_count, 5) = 0 THEN 1 ELSE 0 END) AS combo_count,
                     COUNT(*) AS participant_number
                 FROM match_status ms
@@ -104,7 +102,7 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
             ) stats ON stats.match_id = mi.id AND stats.user_id = mp.user_id
             WHERE mp.user_id = :userId
               AND mp.leave_date IS NOT NULL
-            GROUP BY mi.id, mi.name, stats.participant_days, stats.combo_count, stats.participant_number
+            GROUP BY mi.id, mi.name, mp.join_date, mp.leave_date, stats.combo_count, stats.participant_number
             ORDER BY MAX(mp.leave_date) DESC, mi.id DESC
             """, nativeQuery = true)
     List<MyPageMatchSummaryProjection> findCompletedMatchSummaries(@Param("userId") Long userId);
