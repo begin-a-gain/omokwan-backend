@@ -1,4 +1,4 @@
-package begin_a_gain.omokwang.nickname.ui;
+package begin_a_gain.omokwang.nickname.controller;
 
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
 import begin_a_gain.omokwang.common.response.CommonResponse;
