@@ -1,6 +1,7 @@
 package begin_a_gain.omokwang.match_detail.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -14,6 +15,8 @@ import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
+import begin_a_gain.omokwang.common.exception.CustomException;
+import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.notification.domain.NotificationEvent;
 import begin_a_gain.omokwang.notification.domain.NotificationRecipient;
 import begin_a_gain.omokwang.notification.domain.NotificationType;
@@ -224,4 +227,60 @@ class MatchDetailServiceTest {
                 .extracting(NotificationRecipient::getRecipientUserId)
                 .containsExactlyInAnyOrder(9L, 2L);
     }
+
+    @Test
+    @DisplayName("대국장은 대국 나가기 시 FORBIDDEN 에러가 발생한다")
+    void leaveMatch_throwsForbiddenWhenCurrentUserIsHost() {
+        var service = spy(matchDetailService);
+        doReturn(1L).when(service).getCurrentUserId();
+
+        var hostUser = User.builder().id(1L).nickname("host").build();
+        var anotherUser = User.builder().id(2L).nickname("user-2").build();
+        var match = MatchInfo.builder().id(10L).name("오목방").build();
+        var hostParticipant = MatchParticipant.builder()
+                .match(match)
+                .user(hostUser)
+                .isHost(true)
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(hostUser));
+        when(matchParticipantRepository.findByMatchIdAndUserId(10L, 1L)).thenReturn(Optional.of(hostParticipant));
+        when(matchParticipantRepository.findUsersByMatchId(10L)).thenReturn(List.of(hostUser, anotherUser));
+
+        assertThatThrownBy(() -> service.leaveMatch(10L))
+                .isInstanceOf(CustomException.class)
+                .satisfies(ex -> assertThat(((CustomException) ex).getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN));
+
+        verify(notificationEventRepository, never()).save(any(NotificationEvent.class));
+        verify(notificationRecipientRepository, never()).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("대국장이어도 참여자가 본인뿐이면 대국을 나갈 수 있다")
+    void leaveMatch_allowsHostToLeaveWhenAlone() {
+        var service = spy(matchDetailService);
+        doReturn(1L).when(service).getCurrentUserId();
+
+        var hostUser = User.builder().id(1L).nickname("host").build();
+        var match = MatchInfo.builder().id(10L).name("오목방").build();
+        var hostParticipant = MatchParticipant.builder()
+                .match(match)
+                .user(hostUser)
+                .isHost(true)
+                .build();
+
+        when(clock.getZone()).thenReturn(ZoneOffset.UTC);
+        when(clock.instant()).thenReturn(Instant.parse("2026-02-25T10:00:00Z"));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(hostUser));
+        when(matchParticipantRepository.findByMatchIdAndUserId(10L, 1L)).thenReturn(Optional.of(hostParticipant));
+        when(matchParticipantRepository.findUsersByMatchId(10L)).thenReturn(List.of(hostUser));
+
+        var response = service.leaveMatch(10L);
+
+        assertThat(response.getUserId()).isEqualTo(1L);
+        assertThat(hostParticipant.getLeaveDate()).isEqualTo(LocalDate.of(2026, 2, 25));
+        verify(notificationEventRepository, never()).save(any(NotificationEvent.class));
+        verify(notificationRecipientRepository, never()).saveAll(any());
+    }
+
 }

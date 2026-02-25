@@ -193,6 +193,11 @@ public class MatchDetailService {
         var userId = currentUser.getId();
         var matchParticipant = matchParticipantRepository.findByMatchIdAndUserId(matchId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+        var participants = matchParticipantRepository.findUsersByMatchId(matchId);
+        var isOnlyParticipant = participants.size() == 1 && participants.getFirst().getId().equals(userId);
+        if (matchParticipant.isHost() && !isOnlyParticipant) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
         matchParticipant.leaveNow(clock);
         notifyMemberLeft(matchId, currentUser, matchParticipant.getMatch().getName());
 
