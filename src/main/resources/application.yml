@@ -13,7 +13,7 @@ jwt:
 # DB
 spring:
   datasource:
-    url: ${MYSQL_URL}?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul
+    url: ${MYSQL_URL}?useSSL=false&useUnicode=true&serverTimezone=UTC
     username: ${MYSQL_USERNAME}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -21,6 +21,14 @@ spring:
     hibernate:
       ddl-auto: update
       dialect: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
 
 springdoc:
   packages-to-scan: begin_a_gain.omokwang  # Swagger 문서를 생성할 컨트롤러가 포함된 패키지를 지정
