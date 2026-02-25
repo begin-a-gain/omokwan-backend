@@ -12,6 +12,7 @@ import begin_a_gain.omokwang.match.domain.MatchInfo;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
+import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.notification.domain.NotificationEvent;
 import begin_a_gain.omokwang.notification.domain.NotificationRecipient;
@@ -54,6 +55,53 @@ class MatchDetailServiceTest {
 
     @InjectMocks
     private MatchDetailService matchDetailService;
+
+    @Test
+    @DisplayName("대국 참여 시 나를 제외한 기존 참여자들에게 MATCH_JOINED 알림을 생성한다")
+    void joinMatch_createsMatchJoinedNotificationForExistingParticipants() {
+        var service = spy(matchDetailService);
+        doReturn(1L).when(service).getCurrentUserId();
+
+        var joinedUser = User.builder().id(1L).nickname("joined-user").build();
+        var existingUser1 = User.builder().id(2L).nickname("user-2").build();
+        var existingUser2 = User.builder().id(3L).nickname("user-3").build();
+        var match = MatchInfo.builder()
+                .id(10L)
+                .name("오목방")
+                .maxParticipants(10)
+                .isPublic(true)
+                .build();
+        var request = new JoinMatchRequest();
+
+        when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(joinedUser));
+        when(matchParticipantRepository.findUsersByMatchId(10L)).thenReturn(List.of(existingUser1, existingUser2));
+        when(matchParticipantRepository.findMaxJoinOrderByMatchId(10L)).thenReturn(2);
+        when(notificationEventRepository.save(any(NotificationEvent.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(clock.instant()).thenReturn(Instant.parse("2026-02-25T10:00:00Z"));
+
+        var response = service.joinMatch(10L, request);
+
+        assertThat(response.getMatchId()).isEqualTo(10L);
+        verify(matchParticipantRepository).save(any(MatchParticipant.class));
+
+        var eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+        verify(notificationEventRepository).save(eventCaptor.capture());
+        var savedEvent = eventCaptor.getValue();
+        assertThat(savedEvent.getType()).isEqualTo(NotificationType.MATCH_JOINED);
+        assertThat(savedEvent.getMatchId()).isEqualTo(10L);
+        assertThat(savedEvent.getActorUserId()).isEqualTo(1L);
+        assertThat(savedEvent.getActorNicknameSnapshot()).isEqualTo("joined-user");
+
+        @SuppressWarnings("unchecked")
+        var recipientsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(notificationRecipientRepository).saveAll(recipientsCaptor.capture());
+        List<NotificationRecipient> recipients = recipientsCaptor.getValue();
+        assertThat(recipients)
+                .extracting(NotificationRecipient::getRecipientUserId)
+                .containsExactlyInAnyOrder(2L, 3L);
+    }
 
     @Test
     @DisplayName("대국 나가기 시 나를 제외한 참여자들에게 MEMBER_LEFT 알림을 생성한다")
@@ -131,5 +179,49 @@ class MatchDetailServiceTest {
         assertThat(response.getUserId()).isEqualTo(1L);
         verify(notificationEventRepository, never()).save(any(NotificationEvent.class));
         verify(notificationRecipientRepository, never()).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("대국 내보내기 시 대상 유저 제외 참여자들에게 MEMBER_LEFT 알림을 생성한다")
+    void kickUserFromMatch_createsMemberLeftNotificationForOtherParticipants() {
+        var service = spy(matchDetailService);
+        doReturn(9L).when(service).getCurrentUserId();
+
+        var hostUser = User.builder().id(9L).nickname("host").build();
+        var kickedUser = User.builder().id(1L).nickname("kicked-user").build();
+        var anotherUser = User.builder().id(2L).nickname("user-2").build();
+        var match = MatchInfo.builder().id(10L).name("오목방").build();
+        var hostParticipant = MatchParticipant.builder().match(match).user(hostUser).isHost(true).build();
+        var kickedParticipant = MatchParticipant.builder().match(match).user(kickedUser).build();
+
+        when(clock.getZone()).thenReturn(ZoneOffset.UTC);
+        when(clock.instant()).thenReturn(Instant.parse("2026-02-25T10:00:00Z"));
+        when(userRepository.findById(9L)).thenReturn(Optional.of(hostUser));
+        when(matchParticipantRepository.findByMatchIdAndIsHostTrue(10L)).thenReturn(Optional.of(hostParticipant));
+        when(matchParticipantRepository.findByMatchIdAndUserId(10L, 1L)).thenReturn(Optional.of(kickedParticipant));
+        when(matchParticipantRepository.findUsersByMatchId(10L)).thenReturn(List.of(hostUser, anotherUser));
+        when(notificationEventRepository.save(any(NotificationEvent.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service.kickUserFromMatch(10L, 1L);
+
+        assertThat(response.getUserId()).isEqualTo(1L);
+        assertThat(kickedParticipant.getLeaveDate()).isEqualTo(LocalDate.of(2026, 2, 25));
+        assertThat(kickedParticipant.getKickedDate()).isEqualTo(LocalDate.of(2026, 2, 25));
+
+        var eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+        verify(notificationEventRepository).save(eventCaptor.capture());
+        var savedEvent = eventCaptor.getValue();
+        assertThat(savedEvent.getType()).isEqualTo(NotificationType.MEMBER_LEFT);
+        assertThat(savedEvent.getActorUserId()).isEqualTo(1L);
+        assertThat(savedEvent.getActorNicknameSnapshot()).isEqualTo("kicked-user");
+
+        @SuppressWarnings("unchecked")
+        var recipientsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(notificationRecipientRepository).saveAll(recipientsCaptor.capture());
+        List<NotificationRecipient> recipients = recipientsCaptor.getValue();
+        assertThat(recipients)
+                .extracting(NotificationRecipient::getRecipientUserId)
+                .containsExactlyInAnyOrder(9L, 2L);
     }
 }
