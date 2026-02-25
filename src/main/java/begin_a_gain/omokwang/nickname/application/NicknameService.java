@@ -2,8 +2,8 @@ package begin_a_gain.omokwang.nickname.application;
 
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
+import begin_a_gain.omokwang.nickname.controller.NicknameValidateResponse;
 import begin_a_gain.omokwang.nickname.domain.NicknameUpdateDto;
-import begin_a_gain.omokwang.nickname.ui.NicknameValidateResponse;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

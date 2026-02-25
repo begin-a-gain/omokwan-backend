@@ -15,10 +15,18 @@ import begin_a_gain.omokwang.match_detail.dto.MatchParticipantsResponse;
 import begin_a_gain.omokwang.match_detail.dto.ParticipantInfo;
 import begin_a_gain.omokwang.match_detail.dto.UserProfileResponse;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
+import begin_a_gain.omokwang.notification.domain.NotificationEvent;
+import begin_a_gain.omokwang.notification.domain.NotificationRecipient;
+import begin_a_gain.omokwang.notification.domain.NotificationType;
+import begin_a_gain.omokwang.notification.repository.NotificationEventRepository;
+import begin_a_gain.omokwang.notification.repository.NotificationRecipientRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +42,8 @@ public class MatchDetailService {
     private final MatchParticipantRepository matchParticipantRepository;
     private final MatchStatusRepository matchStatusRepository;
     private final UserRepository userRepository;
+    private final NotificationEventRepository notificationEventRepository;
+    private final NotificationRecipientRepository notificationRecipientRepository;
     private final Clock clock;
 
     @Transactional
@@ -45,6 +55,7 @@ public class MatchDetailService {
             checkMatchCapacityFull(matchId, match.getMaxParticipants());
             var matchParticipant = convertToMatchParticipant(match);
             matchParticipantRepository.save(matchParticipant);
+            notifyMemberJoined(matchId, matchParticipant.getUser(), match.getName());
         }
         return JoinMatchResponse.builder()
                 .matchId(matchId)
@@ -71,9 +82,13 @@ public class MatchDetailService {
     }
 
     private User getCurrentUser() {
-        var userId = SecurityUtil.getCurrentUserId();
+        var userId = getCurrentUserId();
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+    }
+
+    protected Long getCurrentUserId() {
+        return SecurityUtil.getCurrentUserId();
     }
 
     private int getJoinOrder(Long matchId) {
@@ -152,6 +167,7 @@ public class MatchDetailService {
         var matchParticipant = matchParticipantRepository.findByMatchIdAndUserId(matchId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         matchParticipant.kickNow(clock);
+        notifyMemberLeft(matchId, matchParticipant.getUser(), matchParticipant.getMatch().getName());
 
         return KickUserResponse.builder()
                 .userId(userId)
@@ -173,14 +189,83 @@ public class MatchDetailService {
 
     @Transactional
     public LeaveMatchResponse leaveMatch(Long matchId) {
-        var userId = getCurrentUser().getId();
+        var currentUser = getCurrentUser();
+        var userId = currentUser.getId();
         var matchParticipant = matchParticipantRepository.findByMatchIdAndUserId(matchId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+        var participants = matchParticipantRepository.findUsersByMatchId(matchId);
+        var isOnlyParticipant = participants.size() == 1 && participants.getFirst().getId().equals(userId);
+        if (matchParticipant.isHost() && !isOnlyParticipant) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
         matchParticipant.leaveNow(clock);
+        notifyMemberLeft(matchId, currentUser, matchParticipant.getMatch().getName());
 
         return LeaveMatchResponse.builder()
                 .userId(userId)
                 .build();
+    }
+
+    private void notifyMemberLeft(Long matchId, User leftUser, String matchName) {
+        var recipientUserIds = matchParticipantRepository.findUsersByMatchId(matchId).stream()
+                .map(User::getId)
+                .filter(id -> !id.equals(leftUser.getId()))
+                .toList();
+
+        if (recipientUserIds.isEmpty()) {
+            return;
+        }
+
+        var occurredAt = OffsetDateTime.ofInstant(Instant.now(clock), ZoneOffset.UTC);
+        var event = NotificationEvent.builder()
+                .type(NotificationType.MEMBER_LEFT)
+                .matchId(matchId)
+                .actorUserId(leftUser.getId())
+                .matchNameSnapshot(matchName)
+                .actorNicknameSnapshot(leftUser.getNickname())
+                .occurredAt(occurredAt)
+                .build();
+        var savedEvent = notificationEventRepository.save(event);
+
+        var recipients = recipientUserIds.stream()
+                .map(recipientUserId -> NotificationRecipient.builder()
+                        .notificationEvent(savedEvent)
+                        .recipientUserId(recipientUserId)
+                        .isRead(false)
+                        .build())
+                .toList();
+        notificationRecipientRepository.saveAll(recipients);
+    }
+
+    private void notifyMemberJoined(Long matchId, User joinedUser, String matchName) {
+        var recipientUserIds = matchParticipantRepository.findUsersByMatchId(matchId).stream()
+                .map(User::getId)
+                .filter(id -> !id.equals(joinedUser.getId()))
+                .toList();
+
+        if (recipientUserIds.isEmpty()) {
+            return;
+        }
+
+        var occurredAt = OffsetDateTime.ofInstant(Instant.now(clock), ZoneOffset.UTC);
+        var event = NotificationEvent.builder()
+                .type(NotificationType.MATCH_JOINED)
+                .matchId(matchId)
+                .actorUserId(joinedUser.getId())
+                .matchNameSnapshot(matchName)
+                .actorNicknameSnapshot(joinedUser.getNickname())
+                .occurredAt(occurredAt)
+                .build();
+        var savedEvent = notificationEventRepository.save(event);
+
+        var recipients = recipientUserIds.stream()
+                .map(recipientUserId -> NotificationRecipient.builder()
+                        .notificationEvent(savedEvent)
+                        .recipientUserId(recipientUserId)
+                        .isRead(false)
+                        .build())
+                .toList();
+        notificationRecipientRepository.saveAll(recipients);
     }
 
 

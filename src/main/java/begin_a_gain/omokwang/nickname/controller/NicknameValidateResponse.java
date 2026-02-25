@@ -1,4 +1,4 @@
-package begin_a_gain.omokwang.nickname.ui;
+package begin_a_gain.omokwang.nickname.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
