@@ -2,10 +2,13 @@ package begin_a_gain.omokwang.notification.controller;
 
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
 import begin_a_gain.omokwang.common.response.CommonResponse;
+import begin_a_gain.omokwang.common.response.ErrorResponse;
+import begin_a_gain.omokwang.notification.application.NotificationService;
 import begin_a_gain.omokwang.notification.dto.NotificationListResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import begin_a_gain.omokwang.notification.application.NotificationService;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,8 +28,19 @@ public class NotificationController {
 
     @Operation(summary = "알림 목록 조회", description = "전체/안읽음 알림 목록 조회")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "성공"
+
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "403", description = "Access denied",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
     @GetMapping("/notifications")
     public ResponseEntity<CommonResponse<NotificationListResponse>> getNotifications(
