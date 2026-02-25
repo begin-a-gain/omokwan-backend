@@ -25,10 +25,17 @@ import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
+import begin_a_gain.omokwang.notification.domain.NotificationEvent;
+import begin_a_gain.omokwang.notification.domain.NotificationRecipient;
+import begin_a_gain.omokwang.notification.domain.NotificationType;
+import begin_a_gain.omokwang.notification.repository.NotificationEventRepository;
+import begin_a_gain.omokwang.notification.repository.NotificationRecipientRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
@@ -52,6 +59,8 @@ public class MatchService {
     private final MatchDayRepository matchDayRepository;
     private final MatchStatusRepository matchStatusRepository;
     private final MatchParticipantRepository matchParticipantRepository;
+    private final NotificationEventRepository notificationEventRepository;
+    private final NotificationRecipientRepository notificationRecipientRepository;
 
     private static final int MAX_ATTEMPTS = 50;
     private static final int DEFAULT_STREAK_COUNT = 1;
@@ -239,7 +248,7 @@ public class MatchService {
                 .toList();
     }
 
-    private Long getUserId() {
+    protected Long getUserId() {
         var userId = SecurityUtil.getCurrentUserId();
         userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
@@ -529,20 +538,62 @@ public class MatchService {
 
     @Transactional
     public UpdateHostResponse updateHost(Long matchId, UpdateHostRequest request) {
-        if (!isHost(matchId)) {
+        var previousHostParticipant = matchParticipantRepository.findByMatchIdAndIsHostTrue(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Host not found: " + matchId));
+        var previousHostId = previousHostParticipant.getUser().getId();
+        if (!previousHostId.equals(getUserId())) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
+
+        if (previousHostId.equals(request.getUserId())) {
+            return UpdateHostResponse.builder()
+                    .hostId(request.getUserId())
+                    .build();
+        }
+
+        var newHost = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + request.getUserId()));
+        var match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
         matchParticipantRepository.unsetHost(matchId);
         matchParticipantRepository.setHost(matchId, request.getUserId());
+        notifyHostChanged(matchId, match.getName(), previousHostParticipant.getUser(), newHost);
         return UpdateHostResponse.builder()
                 .hostId(request.getUserId())
                 .build();
     }
 
-    private boolean isHost(Long matchId) {
-        var host = matchParticipantRepository.findByMatchIdAndIsHostTrue(matchId)
-                .orElseThrow(() -> new IllegalArgumentException("Host not found: " + matchId));
-        var hostId = host.getUser().getId();
-        return hostId.equals(getUserId());
+    private void notifyHostChanged(Long matchId, String matchName, User previousHost, User newHost) {
+        var recipientIds = matchParticipantRepository.findUsersByMatchId(matchId).stream()
+                .map(User::getId)
+                .filter(id -> !id.equals(previousHost.getId()))
+                .toList();
+
+        if (recipientIds.isEmpty()) {
+            return;
+        }
+
+        var event = NotificationEvent.builder()
+                .type(NotificationType.HOST_CHANGED)
+                .matchId(matchId)
+                .actorUserId(previousHost.getId())
+                .matchNameSnapshot(matchName)
+                .actorNicknameSnapshot(previousHost.getNickname())
+                .prevHostNicknameSnapshot(previousHost.getNickname())
+                .newHostNicknameSnapshot(newHost.getNickname())
+                .occurredAt(OffsetDateTime.now(ZoneOffset.UTC))
+                .build();
+        var savedEvent = notificationEventRepository.save(event);
+
+        var recipients = recipientIds.stream()
+                .map(recipientId -> NotificationRecipient.builder()
+                        .notificationEvent(savedEvent)
+                        .recipientUserId(recipientId)
+                        .isRead(false)
+                        .build())
+                .toList();
+        notificationRecipientRepository.saveAll(recipients);
     }
+
 }
