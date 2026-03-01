@@ -1,5 +1,6 @@
 package begin_a_gain.omokwang.match.dto;
 
+import begin_a_gain.omokwang.match.domain.ParticipantStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,5 +30,8 @@ public class MatchByDayResponse {
 
     @Schema(description = "대국 완료 여부", example = "true")
     private boolean completed;
+
+    @Schema(description = "대국 참여 여부", example = "KICKED")
+    private ParticipantStatus participantStatus;
 
 }

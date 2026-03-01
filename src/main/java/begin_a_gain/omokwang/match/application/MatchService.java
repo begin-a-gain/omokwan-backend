@@ -10,6 +10,7 @@ import begin_a_gain.omokwang.match.domain.MatchBoardResponse;
 import begin_a_gain.omokwang.match.domain.MatchDay;
 import begin_a_gain.omokwang.match.domain.MatchInfo;
 import begin_a_gain.omokwang.match.domain.MatchStatus;
+import begin_a_gain.omokwang.match.domain.ParticipantStatus;
 import begin_a_gain.omokwang.match.dto.CreateMatchRequest;
 import begin_a_gain.omokwang.match.dto.CreateMatchResponse;
 import begin_a_gain.omokwang.match.dto.MatchBoardRequest;
@@ -152,8 +153,24 @@ public class MatchService {
                 .ongoingDays(calculateOngoingDays(x.getCreateDate()))
                 .maxParticipants(x.getMaxParticipants()).isPublic(x.isPublic())
                 .participants(matchParticipantRepository.findUsersByMatchId(x.getId()).size())
-                .completed(findMatchStatusByDay(x.getId(), date, userId)).build()).toList();
+                .completed(findMatchStatusByDay(x.getId(), date, userId))
+                .participantStatus(getParticipantStatus(x.getId()))
+                .build()).toList();
     }
+
+    private ParticipantStatus getParticipantStatus(Long matchId) {
+        var matchParticipant = matchParticipantRepository.findByMatchIdAndUserId(matchId, getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        if (matchParticipant.isLeft()) {
+            return ParticipantStatus.LEFT;
+        }
+        if (matchParticipant.isKicked()) {
+            return ParticipantStatus.KICKED;
+        }
+        return ParticipantStatus.ACTIVE;
+    }
+
 
     public boolean findMatchStatusByDay(Long matchId, LocalDate matchDate, Long userId) {
         Optional<MatchStatus> matchStatus = matchStatusRepository.findByMatchIdAndMatchDateAndCreateId(matchId,
