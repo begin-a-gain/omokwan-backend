@@ -3,6 +3,7 @@ package begin_a_gain.omokwang.match_detail.controller;
 import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.match_detail.application.MatchDetailService;
+import begin_a_gain.omokwang.match_detail.dto.InviteUsersRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
 import begin_a_gain.omokwang.match_detail.dto.KickUserResponse;
@@ -126,6 +127,27 @@ public class MatchDetailController {
             @PathVariable("matchId") long matchId) {
         var response = matchDetailService.leaveMatch(matchId);
         return ResponseEntity.ok(CommonResponse.success(response));
+    }
+
+    @Operation(summary = "대국 초대", description = "요청한 유저 목록에게 대국 초대 알림을 보낸다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "403", description = "Access denied",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PostMapping("/matches/{matchId}/invites")
+    public ResponseEntity<CommonResponse<Void>> inviteUsers(
+            @Parameter(description = "Unique ID of the match", example = "100")
+            @PathVariable("matchId") long matchId,
+            @RequestBody InviteUsersRequest request) {
+        matchDetailService.inviteUsers(matchId, request);
+        return ResponseEntity.ok(CommonResponse.success());
     }
 
 }

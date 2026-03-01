@@ -13,6 +13,7 @@ import begin_a_gain.omokwang.match.domain.MatchInfo;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
+import begin_a_gain.omokwang.match_detail.dto.InviteUsersRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.common.exception.CustomException;
@@ -279,6 +280,70 @@ class MatchDetailServiceTest {
 
         assertThat(response.getUserId()).isEqualTo(1L);
         assertThat(hostParticipant.getLeaveDate()).isEqualTo(LocalDate.of(2026, 2, 25));
+        verify(notificationEventRepository, never()).save(any(NotificationEvent.class));
+        verify(notificationRecipientRepository, never()).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("대국 초대 시 대상 유저들에게 MATCH_INVITED 알림을 생성한다")
+    void inviteUsers_createsMatchInvitedNotification() {
+        var service = spy(matchDetailService);
+        doReturn(9L).when(service).getCurrentUserId();
+
+        var hostUser = User.builder().id(9L).nickname("host").build();
+        var targetUser1 = User.builder().id(2L).nickname("user-2").build();
+        var targetUser2 = User.builder().id(3L).nickname("user-3").build();
+        var alreadyParticipant = User.builder().id(4L).nickname("user-4").build();
+        var match = MatchInfo.builder().id(10L).name("오목방").build();
+        var hostParticipant = MatchParticipant.builder().match(match).user(hostUser).isHost(true).build();
+        var request = new InviteUsersRequest(List.of(2L, 3L, 4L, 9L, 2L));
+
+        when(clock.instant()).thenReturn(Instant.parse("2026-02-25T10:00:00Z"));
+        when(matchParticipantRepository.findByMatchIdAndIsHostTrue(10L)).thenReturn(Optional.of(hostParticipant));
+        when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
+        when(userRepository.findById(9L)).thenReturn(Optional.of(hostUser));
+        when(matchParticipantRepository.findUsersByMatchId(10L)).thenReturn(List.of(hostUser, alreadyParticipant));
+        when(userRepository.findAllById(List.of(2L, 3L))).thenReturn(List.of(targetUser1, targetUser2));
+        when(notificationEventRepository.save(any(NotificationEvent.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.inviteUsers(10L, request);
+
+        var eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+        verify(notificationEventRepository).save(eventCaptor.capture());
+        var savedEvent = eventCaptor.getValue();
+        assertThat(savedEvent.getType()).isEqualTo(NotificationType.MATCH_INVITED);
+        assertThat(savedEvent.getMatchId()).isEqualTo(10L);
+        assertThat(savedEvent.getActorUserId()).isEqualTo(9L);
+        assertThat(savedEvent.getActorNicknameSnapshot()).isEqualTo("host");
+
+        @SuppressWarnings("unchecked")
+        var recipientsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(notificationRecipientRepository).saveAll(recipientsCaptor.capture());
+        List<NotificationRecipient> recipients = recipientsCaptor.getValue();
+        assertThat(recipients)
+                .extracting(NotificationRecipient::getRecipientUserId)
+                .containsExactlyInAnyOrder(2L, 3L);
+    }
+
+    @Test
+    @DisplayName("대국 초대 시 초대 가능한 유저가 없으면 알림을 생성하지 않는다")
+    void inviteUsers_doesNotCreateNotificationWhenNoInvitableUsers() {
+        var service = spy(matchDetailService);
+        doReturn(9L).when(service).getCurrentUserId();
+
+        var hostUser = User.builder().id(9L).nickname("host").build();
+        var match = MatchInfo.builder().id(10L).name("오목방").build();
+        var hostParticipant = MatchParticipant.builder().match(match).user(hostUser).isHost(true).build();
+        var request = new InviteUsersRequest(List.of(9L));
+
+        when(matchParticipantRepository.findByMatchIdAndIsHostTrue(10L)).thenReturn(Optional.of(hostParticipant));
+        when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
+        when(userRepository.findById(9L)).thenReturn(Optional.of(hostUser));
+        when(matchParticipantRepository.findUsersByMatchId(10L)).thenReturn(List.of(hostUser));
+
+        service.inviteUsers(10L, request);
+
         verify(notificationEventRepository, never()).save(any(NotificationEvent.class));
         verify(notificationRecipientRepository, never()).saveAll(any());
     }
