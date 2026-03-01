@@ -7,6 +7,7 @@ import begin_a_gain.omokwang.match.domain.MatchInfo;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.domain.MatchParticipant;
+import begin_a_gain.omokwang.match_detail.dto.InviteUsersRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchRequest;
 import begin_a_gain.omokwang.match_detail.dto.JoinMatchResponse;
 import begin_a_gain.omokwang.match_detail.dto.KickUserResponse;
@@ -30,6 +31,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -206,6 +208,21 @@ public class MatchDetailService {
                 .build();
     }
 
+    @Transactional
+    public void inviteUsers(Long matchId, InviteUsersRequest request) {
+        requireHost(matchId);
+
+        var match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        var inviter = getCurrentUser();
+
+        var targetIds = getInvitableUserIds(matchId, inviter.getId(), request);
+        if (targetIds.isEmpty()) {
+            return;
+        }
+        notifyMatchInvited(matchId, match.getName(), inviter, targetIds);
+    }
+
     private void notifyMemberLeft(Long matchId, User leftUser, String matchName) {
         var recipientUserIds = matchParticipantRepository.findUsersByMatchId(matchId).stream()
                 .map(User::getId)
@@ -254,6 +271,57 @@ public class MatchDetailService {
                 .actorUserId(joinedUser.getId())
                 .matchNameSnapshot(matchName)
                 .actorNicknameSnapshot(joinedUser.getNickname())
+                .occurredAt(occurredAt)
+                .build();
+        var savedEvent = notificationEventRepository.save(event);
+
+        var recipients = recipientUserIds.stream()
+                .map(recipientUserId -> NotificationRecipient.builder()
+                        .notificationEvent(savedEvent)
+                        .recipientUserId(recipientUserId)
+                        .isRead(false)
+                        .build())
+                .toList();
+        notificationRecipientRepository.saveAll(recipients);
+    }
+
+    private List<Long> getInvitableUserIds(Long matchId, Long inviterId, InviteUsersRequest request) {
+        if (request == null || request.userIds() == null || request.userIds().isEmpty()) {
+            return List.of();
+        }
+
+        var participantIds = matchParticipantRepository.findUsersByMatchId(matchId).stream()
+                .map(User::getId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        var requestedIds = request.userIds().stream()
+                .filter(Objects::nonNull)
+                .filter(id -> !id.equals(inviterId))
+                .filter(id -> !participantIds.contains(id))
+                .distinct()
+                .toList();
+
+        if (requestedIds.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Long> existingUserIds = userRepository.findAllById(requestedIds).stream()
+                .map(User::getId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        return requestedIds.stream()
+                .filter(existingUserIds::contains)
+                .toList();
+    }
+
+    private void notifyMatchInvited(Long matchId, String matchName, User inviter, List<Long> recipientUserIds) {
+        var occurredAt = OffsetDateTime.ofInstant(Instant.now(clock), ZoneOffset.UTC);
+        var event = NotificationEvent.builder()
+                .type(NotificationType.MATCH_INVITED)
+                .matchId(matchId)
+                .actorUserId(inviter.getId())
+                .matchNameSnapshot(matchName)
+                .actorNicknameSnapshot(inviter.getNickname())
                 .occurredAt(occurredAt)
                 .build();
         var savedEvent = notificationEventRepository.save(event);
