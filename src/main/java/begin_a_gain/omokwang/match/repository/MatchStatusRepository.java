@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface MatchStatusRepository extends JpaRepository<MatchStatus, Long> {
+    void deleteByCreateId(Long createId);
 
     Optional<MatchStatus> findByMatchIdAndMatchDateAndCreateId(Long matchId, LocalDate matchDate, Long createId);
 
