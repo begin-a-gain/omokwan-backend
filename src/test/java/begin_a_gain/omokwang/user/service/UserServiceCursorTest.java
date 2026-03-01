@@ -7,6 +7,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
+import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
+import begin_a_gain.omokwang.notification.repository.NotificationEventRepository;
+import begin_a_gain.omokwang.notification.repository.NotificationRecipientRepository;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.repository.DeletionSurveyRepository;
 import begin_a_gain.omokwang.user.repository.UserRepository;
@@ -27,6 +30,12 @@ class UserServiceCursorTest {
     private MatchParticipantRepository matchParticipantRepository;
     @Mock
     private DeletionSurveyRepository deletionSurveyRepository;
+    @Mock
+    private MatchStatusRepository matchStatusRepository;
+    @Mock
+    private NotificationRecipientRepository notificationRecipientRepository;
+    @Mock
+    private NotificationEventRepository notificationEventRepository;
 
     @InjectMocks
     private UserService userService;

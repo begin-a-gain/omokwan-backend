@@ -3,7 +3,10 @@ package begin_a_gain.omokwang.user.service;
 import begin_a_gain.omokwang.auth.utils.SecurityUtil;
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
+import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
+import begin_a_gain.omokwang.notification.repository.NotificationEventRepository;
+import begin_a_gain.omokwang.notification.repository.NotificationRecipientRepository;
 import begin_a_gain.omokwang.user.dto.DeletionSurvey;
 import begin_a_gain.omokwang.user.dto.DeletionSurveyRequest;
 import begin_a_gain.omokwang.user.dto.MyPageMatchSummaryProjection;
@@ -33,6 +36,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final MatchParticipantRepository matchParticipantRepository;
     private final DeletionSurveyRepository deletionSurveyRepository;
+    private final MatchStatusRepository matchStatusRepository;
+    private final NotificationRecipientRepository notificationRecipientRepository;
+    private final NotificationEventRepository notificationEventRepository;
 
     public User save(User user) {
         return userRepository.save(user);
@@ -70,14 +76,29 @@ public class UserService {
     public void deleteUser(long userId) {
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        matchParticipantRepository.deleteByUserId(user.getId());
+
+        deleteUserRelatedData(userId);
         updateUserInfo(user);
+    }
+
+    private void deleteUserRelatedData(long userId) {
+        matchStatusRepository.deleteByCreateId(userId);
+        matchParticipantRepository.deleteByUserId(userId);
+        deletionSurveyRepository.deleteByUserId(userId);
+
+        notificationRecipientRepository.deleteByRecipientUserId(userId);
+        notificationRecipientRepository.deleteByNotificationEventActorUserId(userId);
+        notificationEventRepository.deleteByActorUserId(userId);
     }
 
     private void updateUserInfo(User user) {
         var maskedEmail = getMaskedEmail(user);
         user.setEmail(maskedEmail);
         user.setSocialId(null);
+        user.setNickname(null);
+        user.setPlatform(null);
+        user.setRefreshToken(null);
+        user.setNotificationLastSeenAt(null);
         user.setDeleted(true);
     }
 
