@@ -10,6 +10,8 @@ import begin_a_gain.omokwang.user.dto.MyPageMatchSummaryProjection;
 import begin_a_gain.omokwang.user.dto.MyPageMatchSummaryResponse;
 import begin_a_gain.omokwang.user.dto.MyPageResponse;
 import begin_a_gain.omokwang.user.dto.User;
+import begin_a_gain.omokwang.user.dto.UserListResponse;
+import begin_a_gain.omokwang.user.dto.UserSummaryResponse;
 import begin_a_gain.omokwang.user.repository.DeletionSurveyRepository;
 import begin_a_gain.omokwang.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -18,11 +20,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    private static final int DEFAULT_USER_LIST_SIZE = 20;
+    private static final int MAX_USER_LIST_SIZE = 50;
+    private static final String CURSOR_DELIMITER = "::";
 
     private final UserRepository userRepository;
     private final MatchParticipantRepository matchParticipantRepository;
@@ -152,6 +158,66 @@ public class UserService {
 
     private int getOrZero(Integer value) {
         return value == null ? 0 : value;
+    }
+
+    @Transactional
+    public UserListResponse getUsersByNickname(String nickname, String cursor, Integer size) {
+        int pageSize = normalizeSize(size);
+        var cursorInfo = parseCursor(cursor);
+        var users = userRepository.findUsersByNicknameWithCursor(
+                nickname,
+                cursorInfo.nickname(),
+                cursorInfo.userId(),
+                PageRequest.of(0, pageSize + 1)
+        );
+
+        boolean hasNext = users.size() > pageSize;
+        if (hasNext) {
+            users = users.subList(0, pageSize);
+        }
+
+        var userSummaries = users.stream()
+                .map(user -> new UserSummaryResponse(user.getId(), user.getNickname()))
+                .toList();
+
+        String nextCursor = null;
+        if (hasNext && !users.isEmpty()) {
+            var last = users.get(users.size() - 1);
+            nextCursor = createCursor(last.getNickname(), last.getId());
+        }
+
+        return new UserListResponse(userSummaries, nextCursor, hasNext);
+    }
+
+    private int normalizeSize(Integer size) {
+        if (size == null || size < 1) {
+            return DEFAULT_USER_LIST_SIZE;
+        }
+        return Math.min(size, MAX_USER_LIST_SIZE);
+    }
+
+    private CursorInfo parseCursor(String cursor) {
+        if (cursor == null || cursor.isBlank()) {
+            return new CursorInfo(null, null);
+        }
+        String[] parts = cursor.split(CURSOR_DELIMITER, 2);
+        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+            throw new IllegalArgumentException("Invalid cursor format");
+        }
+
+        try {
+            long userId = Long.parseLong(parts[1]);
+            return new CursorInfo(parts[0], userId);
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Invalid cursor format");
+        }
+    }
+
+    private String createCursor(String nickname, Long userId) {
+        return nickname + CURSOR_DELIMITER + userId;
+    }
+
+    private record CursorInfo(String nickname, Long userId) {
     }
 
 }

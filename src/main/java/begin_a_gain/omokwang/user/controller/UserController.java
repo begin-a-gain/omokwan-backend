@@ -6,6 +6,7 @@ import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.user.dto.DeletionSurveyRequest;
+import begin_a_gain.omokwang.user.dto.UserListResponse;
 import begin_a_gain.omokwang.user.dto.MyPageResponse;
 import begin_a_gain.omokwang.user.dto.User;
 import begin_a_gain.omokwang.user.service.UserService;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -49,6 +51,24 @@ public class UserController {
         User user = userService.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_USER));
         return ResponseEntity.ok(CommonResponse.success(user));
+    }
+
+    @Operation(summary = "유저 목록 조회", description = "닉네임 검색 + cursor 기반 무한 스크롤")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping
+    public ResponseEntity<CommonResponse<UserListResponse>> getUsers(
+            @RequestParam(value = "nickname", required = false) String nickname,
+            @RequestParam(value = "cursor", required = false) String cursor,
+            @RequestParam(value = "size", required = false) Integer size
+    ) {
+        var response = userService.getUsersByNickname(nickname, cursor, size);
+        return ResponseEntity.ok(CommonResponse.success(response));
     }
 
     @Operation(summary = "My page", description = "My page by userId")
