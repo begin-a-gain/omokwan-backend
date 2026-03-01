@@ -4,6 +4,7 @@ import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.match_detail.application.MatchSettingService;
 import begin_a_gain.omokwang.match_detail.dto.MatchSettingResponse;
+import begin_a_gain.omokwang.match_detail.dto.MatchSettingUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Match", description = "Match API")
@@ -36,5 +39,21 @@ public class MatchSettingController {
             @PathVariable("matchId") Long matchId) {
         var response = matchSettingService.getSettingMatch(matchId);
         return ResponseEntity.ok(CommonResponse.success(response));
+    }
+
+    @Operation(summary = "대국 세팅 수정", description = "대국 이름, 최대 인원수, 카테고리, 공개 여부를 수정한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PutMapping("/matches/{matchId}/settings")
+    public ResponseEntity<CommonResponse<Void>> updateMatchSetting(
+            @PathVariable("matchId") Long matchId,
+            @RequestBody MatchSettingUpdateRequest request) {
+        matchSettingService.updateSettingMatch(matchId, request);
+        return ResponseEntity.ok(CommonResponse.success());
     }
 }

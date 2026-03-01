@@ -59,4 +59,20 @@ public class MatchInfo {
         this.createDate = LocalDate.now(ZoneId.of("Asia/Seoul")); // 자동으로 현재 날짜 설정
     }
 
+    public void updateSettings(String name, int maxParticipants, String category, boolean isPublic, String password) {
+        this.name = name;
+        this.maxParticipants = maxParticipants;
+        this.category = category;
+        this.isPublic = isPublic;
+
+        if (isPublic) {
+            this.password = null;
+            return;
+        }
+
+        if (password != null && !password.isBlank()) {
+            this.password = password;
+        }
+    }
+
 }
