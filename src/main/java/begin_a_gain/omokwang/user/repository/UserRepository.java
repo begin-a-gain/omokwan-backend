@@ -1,7 +1,9 @@
 package begin_a_gain.omokwang.user.repository;
 
 import begin_a_gain.omokwang.user.dto.User;
+import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +22,23 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT CASE WHEN u.nickname IS NULL THEN false ELSE true END FROM User u WHERE u.socialId = :socialId")
     boolean existsNicknameBySocialId(@Param("socialId") Long socialId);
+
+    @Query("""
+            SELECT u
+            FROM User u
+            WHERE u.nickname IS NOT NULL
+              AND (:keyword IS NULL OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (
+                  :cursorNickname IS NULL
+                  OR u.nickname > :cursorNickname
+                  OR (u.nickname = :cursorNickname AND u.id > :cursorUserId)
+              )
+            ORDER BY u.nickname ASC, u.id ASC
+            """)
+    List<User> findUsersByNicknameWithCursor(
+            @Param("keyword") String keyword,
+            @Param("cursorNickname") String cursorNickname,
+            @Param("cursorUserId") Long cursorUserId,
+            Pageable pageable
+    );
 }
