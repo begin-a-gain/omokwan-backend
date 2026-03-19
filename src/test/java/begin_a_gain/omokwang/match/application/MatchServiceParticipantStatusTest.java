@@ -311,9 +311,9 @@ class MatchServiceParticipantStatusTest {
         when(matchDayRepository.findAllByMatchId(matchId))
                 .thenReturn(List.of(MatchDay.builder().match(match).dayOfWeek(1).build()));
         when(matchStatusRepository.findByMatchIdAndMatchDateBetween(
-                eq(matchId),
-                any(LocalDate.class),
-                any(LocalDate.class)
+                matchId,
+                LocalDate.of(2026, 3, 15),
+                LocalDate.of(2026, 3, 17)
         )).thenReturn(List.of());
         when(matchStatusRepository.existsByMatchIdAndCreateIdAndCompletedDate(
                 eq(matchId),
