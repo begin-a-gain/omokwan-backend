@@ -1,5 +1,8 @@
 package begin_a_gain.omokwang.notification.application;
 
+import begin_a_gain.omokwang.match.domain.MatchInfo;
+import begin_a_gain.omokwang.match.repository.MatchRepository;
+import begin_a_gain.omokwang.notification.domain.NotificationRecipient;
 import begin_a_gain.omokwang.notification.dto.NotificationFilter;
 import begin_a_gain.omokwang.notification.dto.NotificationItemResponse;
 import begin_a_gain.omokwang.notification.dto.NotificationListResponse;
@@ -18,6 +21,7 @@ public class NotificationService {
 
     private final NotificationRecipientRepository notificationRecipientRepository;
     private final UserRepository userRepository;
+    private final MatchRepository matchRepository;
 
     @Transactional
     public NotificationListResponse getNotifications(Long userId, String rawFilter) {
@@ -40,10 +44,21 @@ public class NotificationService {
         };
 
         var items = recipients.stream()
-                .map(NotificationItemResponse::from)
+                .map(recipient -> NotificationItemResponse.from(recipient, resolveMatchPublic(recipient)))
                 .toList();
 
         return new NotificationListResponse(items);
+    }
+
+    private boolean resolveMatchPublic(NotificationRecipient recipient) {
+        var matchId = recipient.getNotificationEvent().getMatchId();
+        if (matchId == null) {
+            return false;
+        }
+
+        return matchRepository.findById(matchId)
+                .map(MatchInfo::isPublic)
+                .orElse(false);
     }
 
     @Transactional

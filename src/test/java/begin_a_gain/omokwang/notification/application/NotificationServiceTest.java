@@ -5,6 +5,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import begin_a_gain.omokwang.match.domain.MatchInfo;
+import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.notification.domain.NotificationEvent;
 import begin_a_gain.omokwang.notification.domain.NotificationRecipient;
 import begin_a_gain.omokwang.notification.domain.NotificationType;
@@ -29,6 +31,8 @@ class NotificationServiceTest {
     private NotificationRecipientRepository notificationRecipientRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private MatchRepository matchRepository;
 
     @InjectMocks
     private NotificationService notificationService;
@@ -109,10 +113,11 @@ class NotificationServiceTest {
     }
 
     @Test
-    @DisplayName("알림 목록 조회 시 대국 id를 포함해 반환한다")
-    void getNotifications_includesMatchId() {
+    @DisplayName("알림 목록 조회 시 대국 id와 공개 여부를 포함해 반환한다")
+    void getNotifications_includesMatchIdAndPublicStatus() {
         var user = User.builder().id(1L).nickname("user").build();
         var recipient = createUnreadRecipient(1L, 30L);
+        var match = MatchInfo.builder().id(30L).isPublic(true).build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(notificationRecipientRepository
@@ -121,11 +126,13 @@ class NotificationServiceTest {
                         org.mockito.ArgumentMatchers.any(OffsetDateTime.class)
                 ))
                 .thenReturn(List.of(recipient));
+        when(matchRepository.findById(30L)).thenReturn(Optional.of(match));
 
         var response = notificationService.getNotifications(1L, "all");
 
         assertThat(response.notifications()).hasSize(1);
         assertThat(response.notifications().getFirst().matchId()).isEqualTo(30L);
+        assertThat(response.notifications().getFirst().isPublic()).isTrue();
     }
 
     private NotificationRecipient createUnreadRecipient(Long userId, Long matchId) {
