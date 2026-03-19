@@ -19,6 +19,7 @@ import begin_a_gain.omokwang.match.dto.MatchStatusResponse;
 import begin_a_gain.omokwang.match.dto.UpdateHostRequest;
 import begin_a_gain.omokwang.match.dto.UpdateHostResponse;
 import begin_a_gain.omokwang.match.dto.match_board.DateStatus;
+import begin_a_gain.omokwang.match.dto.match_board.MatchSummary;
 import begin_a_gain.omokwang.match.dto.match_board.UserInfo;
 import begin_a_gain.omokwang.match.dto.match_board.UserStatus;
 import begin_a_gain.omokwang.match.repository.MatchDayRepository;
@@ -283,6 +284,7 @@ public class MatchService {
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         checkUserStatus(matchParticipant);
 
+        var matchInfo = getMatchInfo(request.getMatchId());
         var userInfos = getUserInfo(request.getMatchId());
         validateUserId(userInfos);
         validateSearchDate(request);
@@ -290,6 +292,7 @@ public class MatchService {
         var previousCursor = getPreviousCursor(request);
         var nextCursor = getNextCursor(request);
         return MatchBoardResponse.builder()
+                .match(new MatchSummary(matchInfo.getName(), matchInfo.getMaxParticipants()))
                 .users(userInfos)
                 .dates(getMatchDateInfos(request, userInfos))
                 .prevCursor(previousCursor)
@@ -454,9 +457,12 @@ public class MatchService {
     }
 
     private LocalDate getCreateDate(Long matchId) {
-        var matchInfo = matchRepository.findById(matchId)
+        return getMatchInfo(matchId).getCreateDate();
+    }
+
+    private MatchInfo getMatchInfo(Long matchId) {
+        return matchRepository.findById(matchId)
                 .orElseThrow();
-        return matchInfo.getCreateDate();
     }
 
     private static int getDayValue(LocalDate date) {
