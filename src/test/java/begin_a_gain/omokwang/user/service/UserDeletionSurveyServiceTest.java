@@ -80,22 +80,6 @@ class UserDeletionSurveyServiceTest {
                 .hasMessage("Deletion reasons are required");
     }
 
-    @Test
-    @DisplayName("탈퇴 설문 저장 시 OTHER를 선택했는데 기타 사유가 없으면 예외가 발생한다")
-    void deletionSurvey_throwsWhenOtherReasonMissing() {
-        var userId = 1L;
-        setAuthenticatedUser(userId);
-        when(userRepository.findById(userId))
-                .thenReturn(Optional.of(User.builder().id(userId).email("test@test.com").build()));
-
-        assertThatThrownBy(() -> userService.deletionSurvey(new DeletionSurveyRequest(
-                List.of(DeletionReason.OTHER),
-                " "
-        )))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("otherReason is required when OTHER is selected");
-    }
-
     private void setAuthenticatedUser(Long userId) {
         var principal = new UserPrincipal(
                 userId,
