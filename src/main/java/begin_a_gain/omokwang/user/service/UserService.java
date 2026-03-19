@@ -7,6 +7,7 @@ import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
 import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import begin_a_gain.omokwang.notification.repository.NotificationEventRepository;
 import begin_a_gain.omokwang.notification.repository.NotificationRecipientRepository;
+import begin_a_gain.omokwang.user.dto.DeletionReason;
 import begin_a_gain.omokwang.user.dto.DeletionSurvey;
 import begin_a_gain.omokwang.user.dto.DeletionSurveyRequest;
 import begin_a_gain.omokwang.user.dto.MyPageMatchSummaryProjection;
@@ -84,7 +85,6 @@ public class UserService {
     private void deleteUserRelatedData(long userId) {
         matchStatusRepository.deleteByCreateId(userId);
         matchParticipantRepository.deleteByUserId(userId);
-        deletionSurveyRepository.deleteByUserId(userId);
 
         notificationRecipientRepository.deleteByRecipientUserId(userId);
         notificationRecipientRepository.deleteByNotificationEventActorUserId(userId);
@@ -113,6 +113,7 @@ public class UserService {
         long userId = SecurityUtil.getCurrentUserId();
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        validateDeletionSurveyRequest(request);
         DeletionSurvey survey = DeletionSurvey.builder()
                 .userId(user.getId())
                 .reasons(request.reasons())
@@ -120,6 +121,19 @@ public class UserService {
                 .build();
 
         deletionSurveyRepository.save(survey);
+    }
+
+    private void validateDeletionSurveyRequest(DeletionSurveyRequest request) {
+        if (request == null || request.reasons() == null || request.reasons().isEmpty()) {
+            throw new IllegalArgumentException("Deletion reasons are required");
+        }
+
+        boolean hasOther = request.reasons().contains(DeletionReason.OTHER);
+        boolean hasOtherReason = request.otherReason() != null && !request.otherReason().isBlank();
+
+        if (hasOther && !hasOtherReason) {
+            throw new IllegalArgumentException("otherReason is required when OTHER is selected");
+        }
     }
 
     @Transactional
