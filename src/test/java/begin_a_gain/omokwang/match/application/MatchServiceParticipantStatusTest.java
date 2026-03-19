@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class MatchServiceParticipantStatusTest {
@@ -187,6 +188,88 @@ class MatchServiceParticipantStatusTest {
         assertThatThrownBy(() -> matchService.findMatchByDay(date))
                 .isInstanceOf(CustomException.class)
                 .satisfies(exception -> assertThat(((CustomException) exception).getErrorCode())
+                        .isEqualTo(ErrorCode.NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("getParticipantStatus는 leaveDate와 kickedDate가 모두 없으면 ACTIVE를 반환한다")
+    void getParticipantStatus_returnsActive() {
+        var userId = 1L;
+        setAuthenticatedUser(userId);
+
+        var user = User.builder().id(userId).email("test@test.com").nickname("test").build();
+        var match = MatchInfo.builder().id(100L).createId(user).name("오목 대국").build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(matchParticipantRepository.findByMatchIdAndUserId(100L, userId))
+                .thenReturn(Optional.of(MatchParticipant.builder().match(match).user(user).build()));
+
+        var result = ReflectionTestUtils.invokeMethod(matchService, "getParticipantStatus", 100L);
+
+        assertThat(result).isEqualTo(ParticipantStatus.ACTIVE);
+    }
+
+    @Test
+    @DisplayName("getParticipantStatus는 leaveDate만 있으면 LEFT를 반환한다")
+    void getParticipantStatus_returnsLeft() {
+        var userId = 1L;
+        setAuthenticatedUser(userId);
+
+        var user = User.builder().id(userId).email("test@test.com").nickname("test").build();
+        var match = MatchInfo.builder().id(100L).createId(user).name("오목 대국").build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(matchParticipantRepository.findByMatchIdAndUserId(100L, userId))
+                .thenReturn(Optional.of(
+                        MatchParticipant.builder()
+                                .match(match)
+                                .user(user)
+                                .leaveDate(LocalDate.of(2026, 2, 28))
+                                .build()));
+
+        var result = ReflectionTestUtils.invokeMethod(matchService, "getParticipantStatus", 100L);
+
+        assertThat(result).isEqualTo(ParticipantStatus.LEFT);
+    }
+
+    @Test
+    @DisplayName("getParticipantStatus는 kickedDate가 있으면 KICKED를 반환한다")
+    void getParticipantStatus_returnsKicked() {
+        var userId = 1L;
+        setAuthenticatedUser(userId);
+
+        var user = User.builder().id(userId).email("test@test.com").nickname("test").build();
+        var match = MatchInfo.builder().id(100L).createId(user).name("오목 대국").build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(matchParticipantRepository.findByMatchIdAndUserId(100L, userId))
+                .thenReturn(Optional.of(
+                        MatchParticipant.builder()
+                                .match(match)
+                                .user(user)
+                                .leaveDate(LocalDate.of(2026, 2, 28))
+                                .kickedDate(LocalDate.of(2026, 2, 28))
+                                .build()));
+
+        var result = ReflectionTestUtils.invokeMethod(matchService, "getParticipantStatus", 100L);
+
+        assertThat(result).isEqualTo(ParticipantStatus.KICKED);
+    }
+
+    @Test
+    @DisplayName("getParticipantStatus는 참가 정보가 없으면 NOT_FOUND 예외를 던진다")
+    void getParticipantStatus_throwsNotFoundWhenParticipantMissing() {
+        var userId = 1L;
+        setAuthenticatedUser(userId);
+
+        var user = User.builder().id(userId).email("test@test.com").nickname("test").build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(matchParticipantRepository.findByMatchIdAndUserId(100L, userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(matchService, "getParticipantStatus", 100L))
+                .hasRootCauseInstanceOf(CustomException.class)
+                .satisfies(exception -> assertThat(((CustomException) exception.getCause()).getErrorCode())
                         .isEqualTo(ErrorCode.NOT_FOUND));
     }
 

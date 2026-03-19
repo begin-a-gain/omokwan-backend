@@ -108,6 +108,26 @@ class NotificationServiceTest {
         verify(notificationRecipientRepository).existsByRecipientUserIdAndCreatedAtAfter(1L, seenAt);
     }
 
+    @Test
+    @DisplayName("알림 목록 조회 시 대국 id를 포함해 반환한다")
+    void getNotifications_includesMatchId() {
+        var user = User.builder().id(1L).nickname("user").build();
+        var recipient = createUnreadRecipient(1L, 30L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(notificationRecipientRepository
+                .findByRecipientUserIdAndNotificationEvent_OccurredAtGreaterThanEqualOrderByCreatedAtDescIdDesc(
+                        org.mockito.ArgumentMatchers.eq(1L),
+                        org.mockito.ArgumentMatchers.any(OffsetDateTime.class)
+                ))
+                .thenReturn(List.of(recipient));
+
+        var response = notificationService.getNotifications(1L, "all");
+
+        assertThat(response.notifications()).hasSize(1);
+        assertThat(response.notifications().getFirst().matchId()).isEqualTo(30L);
+    }
+
     private NotificationRecipient createUnreadRecipient(Long userId, Long matchId) {
         var event = NotificationEvent.builder()
                 .id(100L)

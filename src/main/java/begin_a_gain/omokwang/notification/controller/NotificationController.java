@@ -68,7 +68,7 @@ public class NotificationController {
                             schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @GetMapping("/notifications/unread-status")
+    @GetMapping("/")
     public ResponseEntity<CommonResponse<NotificationUnreadStatusResponse>> getUnreadStatus() {
         var userId = SecurityUtil.getCurrentUserId();
         var response = notificationService.getUnreadStatus(userId);
