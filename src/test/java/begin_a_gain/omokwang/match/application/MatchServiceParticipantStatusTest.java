@@ -82,6 +82,7 @@ class MatchServiceParticipantStatusTest {
         when(matchStatusRepository.findByMatchIdAndMatchDateAndCreateId(100L, date, userId)).thenReturn(Optional.empty());
         when(matchParticipantRepository.findByMatchIdAndUserId(100L, userId))
                 .thenReturn(Optional.of(MatchParticipant.builder().match(match).user(user).build()));
+        when(matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(100L)).thenReturn(1L);
 
         var result = matchService.findMatchByDay(date);
 
@@ -119,6 +120,7 @@ class MatchServiceParticipantStatusTest {
                                 .user(user)
                                 .leaveDate(LocalDate.of(2026, 2, 28))
                                 .build()));
+        when(matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(100L)).thenReturn(1L);
 
         var result = matchService.findMatchByDay(date);
 
@@ -157,6 +159,7 @@ class MatchServiceParticipantStatusTest {
                                 .leaveDate(LocalDate.of(2026, 2, 28))
                                 .kickedDate(LocalDate.of(2026, 2, 28))
                                 .build()));
+        when(matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(100L)).thenReturn(1L);
 
         var result = matchService.findMatchByDay(date);
 
@@ -207,6 +210,7 @@ class MatchServiceParticipantStatusTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(matchParticipantRepository.findByMatchIdAndUserId(100L, userId))
                 .thenReturn(Optional.of(MatchParticipant.builder().match(match).user(user).build()));
+        when(matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(100L)).thenReturn(1L);
 
         var result = ReflectionTestUtils.invokeMethod(matchService, "getParticipantStatus", 100L);
 
@@ -230,6 +234,7 @@ class MatchServiceParticipantStatusTest {
                                 .user(user)
                                 .leaveDate(LocalDate.of(2026, 2, 28))
                                 .build()));
+        when(matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(100L)).thenReturn(1L);
 
         var result = ReflectionTestUtils.invokeMethod(matchService, "getParticipantStatus", 100L);
 
@@ -254,6 +259,7 @@ class MatchServiceParticipantStatusTest {
                                 .leaveDate(LocalDate.of(2026, 2, 28))
                                 .kickedDate(LocalDate.of(2026, 2, 28))
                                 .build()));
+        when(matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(100L)).thenReturn(1L);
 
         var result = ReflectionTestUtils.invokeMethod(matchService, "getParticipantStatus", 100L);
 
@@ -275,6 +281,30 @@ class MatchServiceParticipantStatusTest {
                 .isInstanceOf(CustomException.class)
                 .satisfies(exception -> assertThat(((CustomException) exception).getErrorCode())
                         .isEqualTo(ErrorCode.NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("getParticipantStatus는 현재 대국 참여자가 아무도 없으면 DONE을 반환한다")
+    void getParticipantStatus_returnsDoneWhenNoActiveParticipants() {
+        var userId = 1L;
+        setAuthenticatedUser(userId);
+
+        var user = User.builder().id(userId).email("test@test.com").nickname("test").build();
+        var match = MatchInfo.builder().id(100L).createId(user).name("오목 대국").build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(matchParticipantRepository.findByMatchIdAndUserId(100L, userId))
+                .thenReturn(Optional.of(
+                        MatchParticipant.builder()
+                                .match(match)
+                                .user(user)
+                                .leaveDate(LocalDate.of(2026, 2, 28))
+                                .build()));
+        when(matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(100L)).thenReturn(0L);
+
+        var result = ReflectionTestUtils.invokeMethod(matchService, "getParticipantStatus", 100L);
+
+        assertThat(result).isEqualTo(ParticipantStatus.DONE);
     }
 
     @Test
@@ -310,10 +340,11 @@ class MatchServiceParticipantStatusTest {
         when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
         when(matchDayRepository.findAllByMatchId(matchId))
                 .thenReturn(List.of(MatchDay.builder().match(match).dayOfWeek(1).build()));
+        when(matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(matchId)).thenReturn(1L);
         when(matchStatusRepository.findByMatchIdAndMatchDateBetween(
-                matchId,
-                LocalDate.of(2026, 3, 15),
-                LocalDate.of(2026, 3, 17)
+                eq(matchId),
+                any(LocalDate.class),
+                any(LocalDate.class)
         )).thenReturn(List.of());
         when(matchStatusRepository.existsByMatchIdAndCreateIdAndCompletedDate(
                 eq(matchId),

@@ -18,6 +18,8 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
 
     long countByUser_IdAndLeaveDateIsNotNull(Long userId);
 
+    long countByMatch_IdAndLeaveDateIsNull(Long matchId);
+
     @Query("""
                 select mp.user
                 from MatchParticipant mp
