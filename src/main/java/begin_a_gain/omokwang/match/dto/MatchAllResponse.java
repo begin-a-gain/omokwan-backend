@@ -1,6 +1,6 @@
 package begin_a_gain.omokwang.match.dto;
 
-import begin_a_gain.omokwang.match.domain.JoinableStatus;
+import begin_a_gain.omokwang.match.domain.JoinStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -35,6 +35,6 @@ public class MatchAllResponse {
     private boolean isPublic;
 
     @Schema(description = "대국 참여 여부", example = "JOINABLE")
-    private JoinableStatus joinable;
+    private JoinStatus joinable;
 
 }

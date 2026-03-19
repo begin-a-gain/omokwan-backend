@@ -1,6 +1,6 @@
 package begin_a_gain.omokwang.match.repository;
 
-import begin_a_gain.omokwang.match.domain.JoinableStatus;
+import begin_a_gain.omokwang.match.domain.JoinStatus;
 import begin_a_gain.omokwang.match.dto.MatchAllResponse;
 import begin_a_gain.omokwang.match.dto.MatchQuery;
 import java.time.LocalDate;
@@ -116,7 +116,8 @@ public class MatchListRepository {
                     .joinable(getJoinableStatus(
                             rs.getBoolean("already_joined"),
                             rs.getBoolean("was_kicked"),
-                            participants >= maxParticipants
+                            participants >= maxParticipants,
+                            participants
                     ))
                     .build();
         });
@@ -128,16 +129,20 @@ public class MatchListRepository {
         return (int) daysBetween;
     }
 
-    private JoinableStatus getJoinableStatus(boolean alreadyJoined, boolean wasKicked, boolean isFull) {
+    private JoinStatus getJoinableStatus(boolean alreadyJoined, boolean wasKicked, boolean isFull,
+                                         int participants) {
         if (alreadyJoined) {
-            return JoinableStatus.IN_PROGRESS;
+            return JoinStatus.IN_PROGRESS;
         }
         if (wasKicked) {
-            return JoinableStatus.KICKED;
+            return JoinStatus.KICKED;
         }
         if (isFull) {
-            return JoinableStatus.FULL;
+            return JoinStatus.FULL;
         }
-        return JoinableStatus.JOINABLE;
+        if (participants == 0) {
+            return JoinStatus.DONE;
+        }
+        return JoinStatus.LEFT;
     }
 }

@@ -1,9 +1,10 @@
 package begin_a_gain.omokwang.match.domain;
 
-public enum JoinableStatus {
+public enum JoinStatus {
 
-    JOINABLE,
+    LEFT,
     FULL,
     KICKED,
+    DONE,
     IN_PROGRESS;
 }
