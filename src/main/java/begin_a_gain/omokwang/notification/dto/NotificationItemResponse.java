@@ -19,6 +19,8 @@ public record NotificationItemResponse(
         String matchName,
         @Schema(description = "대국 ID", example = "1")
         Long matchId,
+        @Schema(description = "대국 공개 여부", example = "true")
+        boolean isPublic,
         @Schema(description = "행위자 닉네임(참여/탈퇴 유저 등)", example = "모기")
         String actorNickname,
         @Schema(description = "이전 방장 닉네임(HOST_CHANGED에서만 사용)", example = "오목이")
@@ -26,7 +28,7 @@ public record NotificationItemResponse(
         @Schema(description = "현재 방장 닉네임(HOST_CHANGED에서만 사용)", example = "모기")
         String newHostNickname
 ) {
-    public static NotificationItemResponse from(NotificationRecipient recipient) {
+    public static NotificationItemResponse from(NotificationRecipient recipient, boolean isPublic) {
         var event = recipient.getNotificationEvent();
         return new NotificationItemResponse(
                 recipient.getId(),
@@ -35,6 +37,7 @@ public record NotificationItemResponse(
                 event.getOccurredAt(),
                 event.getMatchNameSnapshot(),
                 event.getMatchId(),
+                isPublic,
                 event.getActorNicknameSnapshot(),
                 event.getPrevHostNicknameSnapshot(),
                 event.getNewHostNicknameSnapshot()
