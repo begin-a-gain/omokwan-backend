@@ -340,7 +340,6 @@ class MatchServiceParticipantStatusTest {
         when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
         when(matchDayRepository.findAllByMatchId(matchId))
                 .thenReturn(List.of(MatchDay.builder().match(match).dayOfWeek(1).build()));
-        when(matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(matchId)).thenReturn(1L);
         when(matchStatusRepository.findByMatchIdAndMatchDateBetween(
                 eq(matchId),
                 any(LocalDate.class),

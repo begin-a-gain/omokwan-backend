@@ -60,7 +60,7 @@ public class MatchListRepository {
                   AND (
                        :search IS NULL
                     OR LOWER(info.name)      LIKE CONCAT('%', LOWER(:search), '%')
-                    OR CAST(info.id AS CHAR) LIKE CONCAT('%', :search, '%')
+                    OR LOWER(info.match_code) = LOWER(:search)
                     OR LOWER(u.nickname)     LIKE CONCAT('%', LOWER(:search), '%')
                   )
                 

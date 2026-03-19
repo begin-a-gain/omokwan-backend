@@ -41,7 +41,7 @@ public class MatchListController {
             @Parameter(description = "Category", example = "1")
             @RequestParam(name = "category", required = false) List<Long> categories,
             @Parameter(
-                    description = "Search keyword — filters by match name, match ID, or host name",
+                    description = "Search keyword — filters by match name, match code, or host name",
                     example = "exercise"
             )
 
