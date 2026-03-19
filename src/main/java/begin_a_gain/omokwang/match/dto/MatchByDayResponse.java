@@ -31,7 +31,7 @@ public class MatchByDayResponse {
     @Schema(description = "대국 완료 여부", example = "true")
     private boolean completed;
 
-    @Schema(description = "대국 참여 여부", example = "KICKED")
+    @Schema(description = "대국 참여 상태", example = "KICKED")
     private ParticipantStatus participantStatus;
 
 }

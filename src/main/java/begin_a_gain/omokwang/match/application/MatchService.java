@@ -163,6 +163,9 @@ public class MatchService {
         var matchParticipant = matchParticipantRepository.findByMatchIdAndUserId(matchId, getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
+        if (isMatchDone(matchId)) {
+            return ParticipantStatus.DONE;
+        }
         if (matchParticipant.isLeft()) {
             return ParticipantStatus.LEFT;
         }
@@ -170,6 +173,10 @@ public class MatchService {
             return ParticipantStatus.KICKED;
         }
         return ParticipantStatus.ACTIVE;
+    }
+
+    private boolean isMatchDone(Long matchId) {
+        return matchParticipantRepository.countByMatch_IdAndLeaveDateIsNull(matchId) == 0;
     }
 
 
