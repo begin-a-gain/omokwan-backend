@@ -1,6 +1,7 @@
 package begin_a_gain.omokwang.match.domain;
 
 import begin_a_gain.omokwang.match.dto.match_board.DateStatus;
+import begin_a_gain.omokwang.match.dto.match_board.MatchSummary;
 import begin_a_gain.omokwang.match.dto.match_board.UserInfo;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,6 +12,9 @@ import lombok.Builder;
 @Builder
 @Schema(description = "대국 보드 응답 DTO")
 public record MatchBoardResponse(
+
+        @Schema(description = "대국 기본 정보")
+        MatchSummary match,
 
         @ArraySchema(arraySchema = @Schema(description = "참여한 유저 정보 리스트"))
         List<UserInfo> users,

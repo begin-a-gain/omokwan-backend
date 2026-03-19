@@ -2,13 +2,17 @@ package begin_a_gain.omokwang.match.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import begin_a_gain.omokwang.auth.models.UserPrincipal;
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
+import begin_a_gain.omokwang.match.domain.MatchDay;
 import begin_a_gain.omokwang.match.domain.MatchInfo;
 import begin_a_gain.omokwang.match.domain.ParticipantStatus;
+import begin_a_gain.omokwang.match.dto.MatchBoardRequest;
 import begin_a_gain.omokwang.match.repository.MatchDayRepository;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match.repository.MatchStatusRepository;
@@ -268,9 +272,60 @@ class MatchServiceParticipantStatusTest {
         when(matchParticipantRepository.findByMatchIdAndUserId(100L, userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(matchService, "getParticipantStatus", 100L))
-                .hasRootCauseInstanceOf(CustomException.class)
-                .satisfies(exception -> assertThat(((CustomException) exception.getCause()).getErrorCode())
+                .isInstanceOf(CustomException.class)
+                .satisfies(exception -> assertThat(((CustomException) exception).getErrorCode())
                         .isEqualTo(ErrorCode.NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("대국 보드 조회 시 대국 이름과 최대 참가 인원을 함께 반환한다")
+    void getBoardForMatch_includesMatchSummary() {
+        var userId = 1L;
+        var matchId = 100L;
+        var requestDate = LocalDate.of(2026, 3, 16);
+        setAuthenticatedUser(userId);
+
+        var user = User.builder().id(userId).email("test@test.com").nickname("test").build();
+        var match = MatchInfo.builder()
+                .id(matchId)
+                .createId(user)
+                .name("오목 대국")
+                .createDate(LocalDate.of(2026, 3, 1))
+                .maxParticipants(8)
+                .isPublic(true)
+                .matchCode("MATCH-CODE")
+                .build();
+        var participant = MatchParticipant.builder().match(match).user(user).build();
+        var request = MatchBoardRequest.builder()
+                .matchId(matchId)
+                .date(requestDate)
+                .pageSize(1)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(matchParticipantRepository.findByMatchIdAndUserId(matchId, userId)).thenReturn(Optional.of(participant));
+        when(matchParticipantRepository.findUsersByMatchId(matchId)).thenReturn(List.of(user));
+        when(matchParticipantRepository.findByMatchIdAndIsHostTrue(matchId))
+                .thenReturn(Optional.of(MatchParticipant.builder().match(match).user(user).isHost(true).build()));
+        when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
+        when(matchDayRepository.findAllByMatchId(matchId))
+                .thenReturn(List.of(MatchDay.builder().match(match).dayOfWeek(1).build()));
+        when(matchStatusRepository.findByMatchIdAndMatchDateBetween(
+                matchId,
+                LocalDate.of(2026, 3, 15),
+                LocalDate.of(2026, 3, 17)
+        )).thenReturn(List.of());
+        when(matchStatusRepository.existsByMatchIdAndCreateIdAndCompletedDate(
+                eq(matchId),
+                eq(userId),
+                any(LocalDate.class)
+        )).thenReturn(false);
+
+        var result = matchService.getBoardForMatch(request);
+
+        assertThat(result.match()).isNotNull();
+        assertThat(result.match().matchName()).isEqualTo("오목 대국");
+        assertThat(result.match().maxParticipants()).isEqualTo(8);
     }
 
     private void setAuthenticatedUser(Long userId) {
