@@ -108,6 +108,49 @@ class MatchDetailServiceTest {
     }
 
     @Test
+    @DisplayName("대국에 나갔던 사용자가 다시 참여하면 기존 참여 정보를 재사용하고 leaveDate를 초기화한다")
+    void joinMatch_rejoinsLeftParticipant() {
+        var service = spy(matchDetailService);
+        doReturn(1L).when(service).getCurrentUserId();
+
+        var joinedUser = User.builder().id(1L).nickname("joined-user").build();
+        var existingUser = User.builder().id(2L).nickname("user-2").build();
+        var match = MatchInfo.builder()
+                .id(10L)
+                .name("오목방")
+                .maxParticipants(10)
+                .isPublic(true)
+                .build();
+        var leftParticipant = MatchParticipant.builder()
+                .match(match)
+                .user(joinedUser)
+                .joinOrder(1)
+                .leaveDate(LocalDate.of(2026, 2, 20))
+                .build();
+        var request = new JoinMatchRequest();
+
+        when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(joinedUser));
+        when(matchParticipantRepository.findByMatchIdAndUserId(10L, 1L)).thenReturn(Optional.of(leftParticipant));
+        when(matchParticipantRepository.findUsersByMatchId(10L)).thenReturn(List.of(existingUser));
+        when(notificationEventRepository.save(any(NotificationEvent.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(clock.instant()).thenReturn(Instant.parse("2026-02-25T10:00:00Z"));
+
+        var response = service.joinMatch(10L, request);
+
+        assertThat(response.getMatchId()).isEqualTo(10L);
+        assertThat(leftParticipant.getLeaveDate()).isNull();
+        verify(matchParticipantRepository, never()).save(any(MatchParticipant.class));
+
+        var eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+        verify(notificationEventRepository).save(eventCaptor.capture());
+        var savedEvent = eventCaptor.getValue();
+        assertThat(savedEvent.getType()).isEqualTo(NotificationType.MATCH_JOINED);
+        assertThat(savedEvent.getActorUserId()).isEqualTo(1L);
+    }
+
+    @Test
     @DisplayName("대국 나가기 시 나를 제외한 참여자들에게 MEMBER_LEFT 알림을 생성한다")
     void leaveMatch_createsMemberLeftNotificationForOtherParticipants() {
         var service = spy(matchDetailService);
