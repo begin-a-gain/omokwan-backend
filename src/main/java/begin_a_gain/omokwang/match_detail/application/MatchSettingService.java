@@ -1,5 +1,6 @@
 package begin_a_gain.omokwang.match_detail.application;
 
+import begin_a_gain.omokwang.auth.utils.SecurityUtil;
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.match.domain.MatchInfo;
@@ -7,6 +8,7 @@ import begin_a_gain.omokwang.match.repository.MatchDayRepository;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
 import begin_a_gain.omokwang.match_detail.dto.MatchSettingResponse;
 import begin_a_gain.omokwang.match_detail.dto.MatchSettingUpdateRequest;
+import begin_a_gain.omokwang.match_detail.repository.MatchParticipantRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -20,6 +22,7 @@ public class MatchSettingService {
 
     private final MatchRepository matchRepository;
     private final MatchDayRepository matchDayRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
 
 
     @Transactional(readOnly = true)
@@ -33,6 +36,7 @@ public class MatchSettingService {
 
     @Transactional
     public void updateSettingMatch(Long matchId, MatchSettingUpdateRequest request) {
+        requireHost(matchId);
         var matchInfo = matchRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
@@ -45,6 +49,21 @@ public class MatchSettingService {
                 request.isPublic(),
                 request.password()
         );
+    }
+
+    private void requireHost(Long matchId) {
+        var currentUserId = getCurrentUserId();
+        var hostUserId = matchParticipantRepository.findByMatchIdAndIsHostTrue(matchId)
+                .map(participant -> participant.getUser().getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
+        if (!hostUserId.equals(currentUserId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+    }
+
+    protected Long getCurrentUserId() {
+        return SecurityUtil.getCurrentUserId();
     }
 
     private int getOngoingDays(LocalDate createDate) {
