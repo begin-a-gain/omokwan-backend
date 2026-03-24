@@ -29,6 +29,16 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
             """)
     List<User> findUsersByMatchId(@Param("matchId") Long matchId);
 
+    @Query("""
+                select count(mp) > 0
+                from MatchParticipant mp
+                where mp.match.id = :matchId
+                  and mp.user.id in :userIds
+                  and mp.kickedDate is not null
+            """)
+    boolean existsKickedUserInMatch(@Param("matchId") Long matchId, @Param("userIds") List<Long> userIds);
+
+
     Optional<MatchParticipant> findByMatchIdAndUserId(Long matchId, Long userId);
 
     @Query("SELECT COALESCE(MAX(mp.joinOrder), 0) FROM MatchParticipant mp WHERE mp.match.id = :matchId")

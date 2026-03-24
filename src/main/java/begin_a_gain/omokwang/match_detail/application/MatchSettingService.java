@@ -2,7 +2,6 @@ package begin_a_gain.omokwang.match_detail.application;
 
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
-import begin_a_gain.omokwang.match.domain.CategoryType;
 import begin_a_gain.omokwang.match.domain.MatchInfo;
 import begin_a_gain.omokwang.match.repository.MatchDayRepository;
 import begin_a_gain.omokwang.match.repository.MatchRepository;
@@ -37,9 +36,6 @@ public class MatchSettingService {
         var matchInfo = matchRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
-        if (!CategoryType.isValidCategory(request.category())) {
-            throw new IllegalArgumentException("Invalid category code: " + request.category());
-        }
         validatePasswordForPrivateSwitch(matchInfo.isPublic(), request.isPublic(), request.password());
 
         matchInfo.updateSettings(

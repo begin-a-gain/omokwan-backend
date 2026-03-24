@@ -295,6 +295,9 @@ public class MatchDetailService {
         if (request == null || request.userIds() == null || request.userIds().isEmpty()) {
             return List.of();
         }
+        if (isKickedUser(matchId, request.userIds())) {
+            throw new CustomException(ErrorCode.KICKED_USER);
+        }
 
         var participantIds = matchParticipantRepository.findUsersByMatchId(matchId).stream()
                 .map(User::getId)
@@ -318,6 +321,10 @@ public class MatchDetailService {
         return requestedIds.stream()
                 .filter(existingUserIds::contains)
                 .toList();
+    }
+
+    private boolean isKickedUser(Long matchId, List<Long> userIds) {
+        return matchParticipantRepository.existsKickedUserInMatch(matchId, userIds);
     }
 
     private void notifyMatchInvited(Long matchId, String matchName, User inviter, List<Long> recipientUserIds) {
