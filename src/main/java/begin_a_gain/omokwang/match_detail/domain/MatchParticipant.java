@@ -62,6 +62,10 @@ public class MatchParticipant {
         this.leaveDate = LocalDate.now(clock);
     }
 
+    public void rejoin() {
+        this.leaveDate = null;
+    }
+
     public boolean isKicked() {
         return kickedDate != null;
     }

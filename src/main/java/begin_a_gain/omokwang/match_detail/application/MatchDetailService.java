@@ -53,12 +53,20 @@ public class MatchDetailService {
         var match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
         checkMatchPassword(request, match);
-        if (!hasJoinedMatch(matchId)) {
-            checkMatchCapacityFull(matchId, match.getMaxParticipants());
-            var matchParticipant = convertToMatchParticipant(match);
-            matchParticipantRepository.save(matchParticipant);
-            notifyMemberJoined(matchId, matchParticipant.getUser(), match.getName());
+        var currentUser = getCurrentUser();
+        var existingParticipant = matchParticipantRepository.findByMatchIdAndUserId(matchId, currentUser.getId());
+        checkMatchCapacityFull(matchId, match.getMaxParticipants());
+        if (existingParticipant.isPresent()) {
+            handleExistingParticipant(existingParticipant.get(), match);
+            return JoinMatchResponse.builder()
+                    .matchId(matchId)
+                    .build();
         }
+
+        var matchParticipant = convertToMatchParticipant(match, currentUser);
+        matchParticipantRepository.save(matchParticipant);
+        notifyMemberJoined(matchId, matchParticipant.getUser(), match.getName());
+
         return JoinMatchResponse.builder()
                 .matchId(matchId)
                 .build();
@@ -74,8 +82,17 @@ public class MatchDetailService {
         }
     }
 
-    private MatchParticipant convertToMatchParticipant(MatchInfo match) {
-        User participant = getCurrentUser();
+    private void handleExistingParticipant(MatchParticipant existingParticipant, MatchInfo match) {
+        if (existingParticipant.isKicked()) {
+            throw new CustomException(ErrorCode.KICKED_USER);
+        }
+        if (existingParticipant.isLeft()) {
+            existingParticipant.rejoin();
+            notifyMemberJoined(match.getId(), existingParticipant.getUser(), match.getName());
+        }
+    }
+
+    private MatchParticipant convertToMatchParticipant(MatchInfo match, User participant) {
         return MatchParticipant.builder()
                 .match(match)
                 .user(participant)
@@ -95,17 +112,6 @@ public class MatchDetailService {
 
     private int getJoinOrder(Long matchId) {
         return matchParticipantRepository.findMaxJoinOrderByMatchId(matchId) + 1;
-    }
-
-    private boolean hasJoinedMatch(Long matchId) {
-        var matchUserIds = getMatchUserIds(matchId);
-        var currentUserId = getCurrentUser().getId();
-        return matchUserIds.contains(currentUserId);
-    }
-
-    private List<Long> getMatchUserIds(Long matchId) {
-        var users = matchParticipantRepository.findUsersByMatchId(matchId);
-        return users.stream().map(User::getId).toList();
     }
 
     @Transactional(readOnly = true)
