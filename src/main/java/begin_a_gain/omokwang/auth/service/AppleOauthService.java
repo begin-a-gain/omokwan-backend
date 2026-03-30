@@ -15,9 +15,12 @@ import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -35,8 +38,8 @@ public class AppleOauthService {
     private final UserService userService;
     private final ObjectMapper objectMapper;
 
-    @Value("${apple.client-id:}")
-    private String appleClientId;
+    @Value("${apple.client-ids:${apple.client-id:}}")
+    private String appleClientIds;
 
     public User getUserProfileByIdentityToken(String identityToken) {
         Claims claims = parseAndValidateIdentityToken(identityToken);
@@ -65,7 +68,8 @@ public class AppleOauthService {
 
     private Claims parseAndValidateIdentityToken(String identityToken) {
         try {
-            if (appleClientId == null || appleClientId.isBlank()) {
+            Set<String> allowedClientIds = getAllowedClientIds();
+            if (allowedClientIds.isEmpty()) {
                 throw new CustomException(ErrorCode.BAD_REQUEST);
             }
 
@@ -89,7 +93,7 @@ public class AppleOauthService {
                     .getBody();
 
             validateIssuer(claims);
-            validateAudience(claims);
+            validateAudience(claims, allowedClientIds);
 
             return claims;
         } catch (CustomException e) {
@@ -142,19 +146,29 @@ public class AppleOauthService {
         }
     }
 
-    private void validateAudience(Claims claims) {
+    private void validateAudience(Claims claims, Set<String> allowedClientIds) {
         Object audienceClaim = claims.get("aud");
 
         boolean valid = false;
         if (audienceClaim instanceof String audience) {
-            valid = appleClientId.equals(audience);
+            valid = allowedClientIds.contains(audience);
         } else if (audienceClaim instanceof List<?> audienceList) {
-            valid = audienceList.stream().anyMatch(appleClientId::equals);
+            valid = audienceList.stream()
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .anyMatch(allowedClientIds::contains);
         }
 
         if (!valid) {
             throw new CustomException(ErrorCode.INVALID_ACCESS_TOKEN);
         }
+    }
+
+    private Set<String> getAllowedClientIds() {
+        return Arrays.stream(appleClientIds.split(","))
+                .map(String::trim)
+                .filter(clientId -> !clientId.isBlank())
+                .collect(Collectors.toSet());
     }
 
     private Long toAppleSocialId(String sub) {
