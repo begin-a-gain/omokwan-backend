@@ -54,4 +54,4 @@ management:
       show-details: always
 
 apple:
-  client-id: com.begin-a-gain.omokwang.dev
+  client-ids: com.begin-a-gain.omokwang.dev,com.begin-a-gain.omokwang.prod
