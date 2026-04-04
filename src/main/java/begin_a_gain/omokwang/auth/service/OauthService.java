@@ -5,6 +5,7 @@ import begin_a_gain.omokwang.auth.dto.RefreshTokenResponseDto;
 import begin_a_gain.omokwang.common.exception.CustomException;
 import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.user.dto.User;
+import begin_a_gain.omokwang.user.repository.UserRepository;
 import begin_a_gain.omokwang.user.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -19,6 +20,9 @@ public class OauthService {
     private final JwtTokenService jwtTokenService;
     private final KakaoOauthService kakaoOauthService;
     private final AppleOauthService appleOauthService;
+    private final UserRepository userRepository;
+
+    private static final Long TEST_SOCIAL_ID = 1231238588816752222L;
 
     //카카오 로그인
     public OauthDto loginWithKakao(String accessToken, HttpServletResponse response) {
@@ -28,6 +32,12 @@ public class OauthService {
 
     public OauthDto loginWithApple(String identityToken, HttpServletResponse response) {
         User user = appleOauthService.getUserProfileByIdentityToken(identityToken);
+        return new OauthDto(getTokens(user, response), user.getId());
+    }
+
+    public OauthDto loginWithTest(HttpServletResponse response) {
+        User user = userRepository.findBySocialId(TEST_SOCIAL_ID)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         return new OauthDto(getTokens(user, response), user.getId());
     }
 
