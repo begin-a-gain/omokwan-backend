@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceCursorTest {
+    private static final Long MATCH_ID = 100L;
 
     @Mock
     private UserRepository userRepository;
@@ -47,10 +48,10 @@ class UserServiceCursorTest {
         var user2 = User.builder().id(2L).nickname("가다").build();
         var user3 = User.builder().id(3L).nickname("가라").build();
 
-        when(userRepository.findUsersByNicknameWithCursor(eq("가"), eq(null), eq(null), any()))
+        when(userRepository.findUsersByNicknameWithCursor(eq(MATCH_ID), eq("가"), eq(null), eq(null), any()))
                 .thenReturn(List.of(user1, user2, user3));
 
-        var response = userService.getUsersByNickname("가", null, 2);
+        var response = userService.getUsersByNickname(MATCH_ID, "가", null, 2);
 
         assertThat(response.users()).hasSize(2);
         assertThat(response.hasNext()).isTrue();
@@ -63,10 +64,10 @@ class UserServiceCursorTest {
     @DisplayName("커서가 있으면 다음 데이터부터 조회한다")
     void getUsersByNickname_usesCursor() {
         var user = User.builder().id(11L).nickname("나다").build();
-        when(userRepository.findUsersByNicknameWithCursor(eq("나"), eq("나다"), eq(10L), any()))
+        when(userRepository.findUsersByNicknameWithCursor(eq(MATCH_ID), eq("나"), eq("나다"), eq(10L), any()))
                 .thenReturn(List.of(user));
 
-        var response = userService.getUsersByNickname("나", "나다::10", 20);
+        var response = userService.getUsersByNickname(MATCH_ID, "나", "나다::10", 20);
 
         assertThat(response.users()).hasSize(1);
         assertThat(response.users().get(0).userId()).isEqualTo(11L);
@@ -77,7 +78,7 @@ class UserServiceCursorTest {
     @Test
     @DisplayName("커서 형식이 잘못되면 예외가 발생한다")
     void getUsersByNickname_throwsWhenCursorInvalid() {
-        assertThatThrownBy(() -> userService.getUsersByNickname("가", "invalid-cursor", 20))
+        assertThatThrownBy(() -> userService.getUsersByNickname(MATCH_ID, "가", "invalid-cursor", 20))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Invalid cursor format");
     }

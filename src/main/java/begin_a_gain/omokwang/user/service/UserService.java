@@ -188,10 +188,11 @@ public class UserService {
     }
 
     @Transactional
-    public UserListResponse getUsersByNickname(String nickname, String cursor, Integer size) {
+    public UserListResponse getUsersByNickname(Long matchId, String nickname, String cursor, Integer size) {
         int pageSize = normalizeSize(size);
         var cursorInfo = parseCursor(cursor);
         var users = userRepository.findUsersByNicknameWithCursor(
+                matchId,
                 nickname,
                 cursorInfo.nickname(),
                 cursorInfo.userId(),

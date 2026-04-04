@@ -6,9 +6,9 @@ import begin_a_gain.omokwang.common.exception.ErrorCode;
 import begin_a_gain.omokwang.common.response.CommonResponse;
 import begin_a_gain.omokwang.common.response.ErrorResponse;
 import begin_a_gain.omokwang.user.dto.DeletionSurveyRequest;
-import begin_a_gain.omokwang.user.dto.UserListResponse;
 import begin_a_gain.omokwang.user.dto.MyPageResponse;
 import begin_a_gain.omokwang.user.dto.User;
+import begin_a_gain.omokwang.user.dto.UserListResponse;
 import begin_a_gain.omokwang.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -64,11 +64,12 @@ public class UserController {
     })
     @GetMapping
     public ResponseEntity<CommonResponse<UserListResponse>> getUsers(
+            @RequestParam(value = "matchId", required = true) Long matchId,
             @RequestParam(value = "nickname", required = false) String nickname,
             @RequestParam(value = "cursor", required = false) String cursor,
             @RequestParam(value = "size", required = false) Integer size
     ) {
-        var response = userService.getUsersByNickname(nickname, cursor, size);
+        var response = userService.getUsersByNickname(matchId, nickname, cursor, size);
         return ResponseEntity.ok(CommonResponse.success(response));
     }
 

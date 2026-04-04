@@ -63,6 +63,17 @@ public class OauthController {
         return ResponseEntity.ok(CommonResponse.success(oauthResponseDto));
     }
 
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공")
+    })
+    @PostMapping("/auth/login/test")
+    public ResponseEntity<CommonResponse<OauthResponseDto>> loginWithTest(
+            HttpServletResponse response) {
+        OauthDto oauthInfo = oauthService.loginWithTest(response);
+        var oauthResponseDto = new OauthResponseDto(oauthInfo.getAccessToken(), true);
+        return ResponseEntity.ok(CommonResponse.success(oauthResponseDto));
+    }
+
     @Operation(summary = "Access Token 재발급", description = "리프레시 토큰과 액세스 토큰을 재발급한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Token 재발급 성공"),

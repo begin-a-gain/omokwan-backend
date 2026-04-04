@@ -28,6 +28,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
             FROM User u
             WHERE u.nickname IS NOT NULL
               AND (:keyword IS NULL OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM MatchParticipant mp
+                  WHERE mp.match.id = :matchId
+                    AND mp.user.id = u.id
+                    AND (
+                        mp.kickedDate IS NOT NULL
+                        OR mp.leaveDate IS NULL
+                    )
+              )
               AND (
                   :cursorNickname IS NULL
                   OR u.nickname > :cursorNickname
@@ -36,9 +46,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
             ORDER BY u.nickname ASC, u.id ASC
             """)
     List<User> findUsersByNicknameWithCursor(
+            @Param("matchId") Long matchId,
             @Param("keyword") String keyword,
             @Param("cursorNickname") String cursorNickname,
             @Param("cursorUserId") Long cursorUserId,
             Pageable pageable
     );
+
 }
