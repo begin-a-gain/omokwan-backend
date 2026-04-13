@@ -66,21 +66,22 @@ public class MatchListRepository {
                 
                 GROUP BY info.id
                 
-                HAVING (
-                  :joinable IS NULL
-                  OR (:joinable = TRUE
-                      AND COUNT(CASE WHEN p.leave_date IS NULL THEN 1 END) < MAX(info.max_participants)
-                      AND already_joined = 0
-                      AND was_kicked = 0
-                  )
-                  OR (:joinable = FALSE
-                      AND (
-                           COUNT(CASE WHEN p.leave_date IS NULL THEN 1 END) >= MAX(info.max_participants)
-                        OR already_joined = 1
-                        OR was_kicked = 1
-                      )
-                  )
-                )
+                HAVING COUNT(CASE WHEN p.leave_date IS NULL THEN 1 END) > 0
+                   AND (
+                     :joinable IS NULL
+                     OR (:joinable = TRUE
+                         AND COUNT(CASE WHEN p.leave_date IS NULL THEN 1 END) < MAX(info.max_participants)
+                         AND already_joined = 0
+                         AND was_kicked = 0
+                     )
+                     OR (:joinable = FALSE
+                         AND (
+                              COUNT(CASE WHEN p.leave_date IS NULL THEN 1 END) >= MAX(info.max_participants)
+                           OR already_joined = 1
+                           OR was_kicked = 1
+                         )
+                     )
+                   )
                 
                 ORDER BY create_date DESC, info.id DESC
                 LIMIT :limitPlusOne OFFSET :offset

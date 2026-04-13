@@ -64,7 +64,7 @@ public class UserController {
     })
     @GetMapping
     public ResponseEntity<CommonResponse<UserListResponse>> getUsers(
-            @RequestParam(value = "matchId", required = true) Long matchId,
+            @RequestParam(value = "matchId") Long matchId,
             @RequestParam(value = "nickname", required = false) String nickname,
             @RequestParam(value = "cursor", required = false) String cursor,
             @RequestParam(value = "size", required = false) Integer size
