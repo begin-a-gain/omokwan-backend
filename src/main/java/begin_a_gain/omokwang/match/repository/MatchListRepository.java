@@ -51,8 +51,12 @@ public class MatchListRepository {
                   ) AS was_kicked
                 
                 FROM match_info AS info
+                JOIN match_participant AS host_p
+                  ON host_p.match_id = info.id
+                 AND host_p.is_host = TRUE
+                 AND host_p.leave_date IS NULL
                 JOIN user AS u
-                  ON u.id = info.create_id
+                  ON u.id = host_p.user_id
                 LEFT JOIN match_participant AS p
                   ON p.match_id = info.id
                 
