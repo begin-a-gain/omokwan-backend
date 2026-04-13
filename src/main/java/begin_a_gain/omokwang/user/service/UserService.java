@@ -138,6 +138,7 @@ public class UserService {
                 .map(this::toMyPageMatchSummary)
                 .toList();
         var completedMatches = matchParticipantRepository.findCompletedMatchSummaries(userId).stream()
+                .filter(this::hasPlacedStone)
                 .map(this::toMyPageMatchSummary)
                 .toList();
 
@@ -145,7 +146,7 @@ public class UserService {
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .inProgressMatchCount(matchParticipantRepository.countByUser_IdAndLeaveDateIsNull(userId))
-                .completedMatchCount(matchParticipantRepository.countByUser_IdAndLeaveDateIsNotNull(userId))
+                .completedMatchCount(completedMatches.size())
                 .inProgressMatches(inProgressMatches)
                 .completedMatches(completedMatches)
                 .build();
@@ -169,6 +170,10 @@ public class UserService {
                 .participantNumbers(getOrZero(projection.getParticipantNumbers()))
                 .dayOfWeeks(dayOfWeeks)
                 .build();
+    }
+
+    private boolean hasPlacedStone(MyPageMatchSummaryProjection projection) {
+        return getOrZero(projection.getParticipantNumbers()) > 0;
     }
 
     private List<Integer> parseDayOfWeeks(String dayOfWeeks) {
